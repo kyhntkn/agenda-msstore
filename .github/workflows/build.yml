@@ -1,0 +1,42 @@
+name: Windows paketleri olustur
+
+on:
+  push:
+    branches: [main, master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm install
+
+      - name: Normal kurulum dosyasi (.exe)
+        run: npm run dist
+
+      - name: Store bilgileri dolduruldu mu kontrol et
+        shell: bash
+        run: |
+          if grep -q "PARTNER_CENTER" package.json; then
+            echo "::error::package.json icindeki PARTNER_CENTER_* alanlarini Partner Center'daki degerlerle degistirin."
+            exit 1
+          fi
+
+      - name: Microsoft Store paketi (.appx)
+        run: npm run dist:store
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Haftalik-Plan-Kurulum
+          path: dist/*.exe
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Haftalik-Plan-Store-Paketi
+          path: dist/*.appx
