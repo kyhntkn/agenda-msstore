@@ -1,0 +1,49 @@
+{
+  "name": "haftalik-plan",
+  "version": "1.1.0",
+  "description": "Haftalik Plan masaustu uygulamasi",
+  "main": "main.js",
+  "author": "Haftalik Plan",
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder --win nsis --publish never",
+    "dist:store": "electron-builder --win appx --publish never"
+  },
+  "devDependencies": {
+    "electron": "^33.0.0",
+    "electron-builder": "^25.0.0"
+  },
+  "build": {
+    "appId": "com.haftalikplan.app",
+    "productName": "Haftalık Planlayıcı",
+    "files": [
+      "main.js",
+      "preload.js",
+      "index.html",
+      "build/icon.ico"
+    ],
+    "win": {
+      "target": "nsis",
+      "icon": "build/icon.ico"
+    },
+    "nsis": {
+      "oneClick": true,
+      "perMachine": false,
+      "artifactName": "Haftalik-Plan-Kurulum.${ext}"
+    },
+    "appx": {
+      "identityName": "KayhanTEKN.HaftalkPlanlayc",
+      "publisher": "CN=A94C9337-5C18-44C3-9DCE-433C130AD6A2",
+      "publisherDisplayName": "Kayhan TEKİN",
+      "applicationId": "HaftalikPlan",
+      "displayName": "Haftalık Planlayıcı",
+      "languages": [
+        "tr-TR"
+      ],
+      "backgroundColor": "#0f766e",
+      "showNameOnTiles": true
+    },
+    "copyright": "Copyright © 2026 Haftalik Plan"
+  },
+  "license": "UNLICENSED"
+}
