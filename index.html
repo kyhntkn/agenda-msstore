@@ -278,6 +278,7 @@ if(kind==="d"){K=function(q){return [pre+":d"+g+":"+q,pre+":dc"+g+":"+q];};last=
 else{K=function(q){return [pre+":t"+g+":"+q,pre+":c"+g+":"+q,pre+":o"+g+":"+q];};last=6;}}
 var t=S[K(r)[0]]||"";
 if(!(await askConfirm((t?'"'+t+'" satırı':"Bu satır")+" silinecek ve altındaki satırlar yukarı kayacak. Devam edilsin mi?","Sil")))return;
+if(kind!=="u"&&kind!=="d"&&t){var hh=Array.isArray(S[pre+":h"])?S[pre+":h"]:[];if(hh.indexOf(t)<0)hh.push(t);S[pre+":h"]=hh;}
 for(var q=r;q<last;q++){var A=K(q+1),B=K(q);for(var i=0;i<A.length;i++){var v=S[A[i]];if(v)S[B[i]]=v;else delete S[B[i]];}}
 K(last).forEach(function(k){delete S[k];});
 save();if(kind==="u")showCust(g);else render(cur,true);
