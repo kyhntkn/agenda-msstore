@@ -108,9 +108,9 @@ html,body{background:#fff}
 <button id="today" type="button">Bu hafta</button>
 <span class="zm"><button id="zo" type="button" title="Küçült (Ctrl −)">−</button><button id="zl" type="button" title="Pencereye sığdır (Ctrl 0)">Sığdır</button><button id="zi" type="button" title="Büyüt (Ctrl +)">+</button></span>
 <button id="print" type="button" class="pri">Yazdır</button>
-<button id="op" type="button" title="Bilgisayarındaki bir kayıt dosyasını aç">Aç</button>
-<button id="sv" type="button" title="Notları kayıt dosyasına kaydeder">Kaydet</button>
-<button id="sa" type="button" title="Yeni bir dosya adı/konumu seçerek kaydeder">Farklı Kaydet</button>
+<button id="op" type="button" title="Daha önce aldığın bir yedek dosyasını (.json) içeri aktarır">Aç</button>
+<button id="sv" type="button" title="Notları yerel veritabanına kaydeder (zaten otomatik kaydedilir)">Kaydet</button>
+<button id="sa" type="button" title="Verilerin bir yedek kopyasını .json dosyası olarak kaydeder">Farklı Kaydet</button>
 <button id="ac" type="button">Sayfa Ekle</button>
 <input id="rf" type="file" accept=".json,application/json" hidden>
 <span id="st" class="hint"></span>
@@ -134,6 +134,8 @@ M.forEach(function(e,i){if(e.y<=2030&&e.d>=START)L.push(i);});
 function rng(m){var f=addDays(m,4);return m.getMonth()===f.getMonth()?m.getDate()+"–"+f.getDate()+" "+SH[m.getMonth()]:m.getDate()+" "+SH[m.getMonth()]+"–"+f.getDate()+" "+SH[f.getMonth()];}
 var S={};
 try{S=JSON.parse(localStorage.getItem(KEY)||"{}")||{};}catch(e){S={};}
+var BOOT=null;try{if(window.agendaAPI&&window.agendaAPI.initSync)BOOT=window.agendaAPI.initSync();}catch(e){BOOT=null;}
+try{if(BOOT&&BOOT.mode==="sqlite"&&localStorage.getItem(KEY+":dirty")!=="1"){var bo=BOOT.text?JSON.parse(BOOT.text):null;S=(bo&&bo.app==="haftalik-plan"&&bo.data&&typeof bo.data==="object")?bo.data:{};localStorage.setItem(KEY,JSON.stringify(S));}}catch(e){}
 function saveLocal(clean){try{localStorage.setItem(KEY,JSON.stringify(S));localStorage.setItem(KEY+":dirty",clean?"0":"1");}catch(e){}}
 function save(){saveLocal(false);queueFile();}
 var cur=0,view="week";
@@ -142,13 +144,18 @@ function ncols(pre){return S[pre+":ncols"]||3;}
 function weekOfToday(){var t=new Date();t=new Date(t.getFullYear(),t.getMonth(),t.getDate());var p=0;for(var q=0;q<L.length;q++){if(t>=M[L[q]].d)p=q;}return p;}
 function weekHasData(ix){var pre=dkey(M[ix].d);if(S[pre+":v"])return true;var n=ncols(pre);for(var c=0;c<n;c++)for(var r=0;r<7;r++){if(String(S[pre+":t"+c+":"+r]||"").trim())return true;}return false;}
 function doneIn(sp,t){var n=ncols(sp),done=false,found=false;for(var c=0;c<n;c++)for(var r=0;r<7;r++){if(String(S[sp+":t"+c+":"+r]||"")===t){found=true;if(S[sp+":c"+c+":"+r])done=true;else return false;}}if(!found)return Array.isArray(S[sp+":h"])&&S[sp+":h"].indexOf(t)>=0;return done;}
+function shiftUpWeek(pre,c,r){var ks=["t","c","o"];
+for(var q=r;q<6;q++)ks.forEach(function(k){var a=pre+":"+k+c+":"+(q+1),b=pre+":"+k+c+":"+q,v=S[a];if(v)S[b]=v;else delete S[b];});
+ks.forEach(function(k){delete S[pre+":"+k+c+":6"];});}
 function reconcileCarry(upto){var ch=false;
 for(var q=0;q<=upto;q++){var pre=dkey(M[L[q]].d);if(S[pre+":v"]!==1)continue;var n=ncols(pre);
-for(var c=0;c<n;c++)for(var r=0;r<7;r++){var ok=pre+":o"+c+":"+r,sp=S[ok];if(!sp)continue;
+for(var c=0;c<n;c++){var r=0;while(r<7){var ok=pre+":o"+c+":"+r,sp=S[ok];
+if(!sp){r++;continue;}
 var t=String(S[pre+":t"+c+":"+r]||"");
-if(!t){delete S[ok];ch=true;continue;}
-if(S[pre+":c"+c+":"+r])continue;
-if(doneIn(sp,t)){delete S[pre+":t"+c+":"+r];delete S[pre+":c"+c+":"+r];delete S[ok];var h=Array.isArray(S[pre+":h"])?S[pre+":h"]:[];if(h.indexOf(t)<0)h.push(t);S[pre+":h"]=h;ch=true;}}}
+if(!t){delete S[ok];ch=true;r++;continue;}
+if(S[pre+":c"+c+":"+r]){r++;continue;}
+if(doneIn(sp,t)){var h=Array.isArray(S[pre+":h"])?S[pre+":h"]:[];if(h.indexOf(t)<0)h.push(t);S[pre+":h"]=h;shiftUpWeek(pre,c,r);ch=true;continue;}
+r++;}}}
 if(ch)save();}
 function weekTexts(sp){var n=ncols(sp),o=[];for(var c=0;c<n;c++)for(var r=0;r<7;r++){var t=String(S[sp+":t"+c+":"+r]||"");if(t.trim())o.push(t);}return o;}
 function ensureCarry(p){
@@ -241,25 +248,36 @@ o.addEventListener("click",function(e){if(e.target===o||e.target.hasAttribute("d
 inp.addEventListener("keydown",function(e){if(e.key==="Enter")done(inp.value);else if(e.key==="Escape")done(null);});
 document.body.appendChild(o);inp.focus();
 });}
+function askConfirm(msg,okLabel,single){return new Promise(function(res){
+var o=document.createElement("div");o.className="mdl";
+o.innerHTML='<div class="box"><div class="mt"></div><div class="mb"><button type="button" data-c="1">İptal</button><button type="button" data-o="1" class="pri"></button></div></div>';
+o.querySelector(".mt").textContent=msg;var ok=o.querySelector("[data-o]");ok.textContent=okLabel||"Tamam";
+if(single)o.querySelector("[data-c]").remove();
+function done(v){document.removeEventListener("keydown",kd,true);o.remove();res(v);}
+function kd(e){if(e.key==="Escape"){e.preventDefault();done(false);}else if(e.key==="Enter"){e.preventDefault();done(true);}}
+o.addEventListener("click",function(e){if(e.target===o||e.target.hasAttribute("data-c"))done(false);else if(e.target.hasAttribute("data-o"))done(true);});
+document.addEventListener("keydown",kd,true);document.body.appendChild(o);ok.focus();
+});}
+function showMsg(msg){return askConfirm(msg,"Tamam",true);}
 async function addCustomer(){
 var nm=await askText("Sayfa adı","");if(nm===null)return;nm=nm.trim();if(!nm)return;
 var id="m"+Date.now().toString(36),l=getList().slice();l.push({id:id,name:nm});S["cust:list"]=l;save();showCust(id);
 }
-function delCustomer(id){
+async function delCustomer(id){
 var c=getList().filter(function(x){return x.id===id;})[0];if(!c)return;
-if(!confirm('"'+c.name+'" sayfası ve tüm satırları silinecek. Devam edilsin mi?'))return;
+if(!(await askConfirm('"'+c.name+'" sayfası ve tüm satırları silinecek. Devam edilsin mi?',"Sil")))return;
 S["cust:list"]=getList().filter(function(x){return x.id!==id;});
 Object.keys(S).forEach(function(k){if(k.indexOf("cust:"+id+":")===0)delete S[k];});
 save();render(cur);
 }
-function delRow(kind,g,r){
+async function delRow(kind,g,r){
 var K,last;
 if(kind==="u"){var b="cust:"+g+":";K=function(q){return [b+"t:"+q,b+"c:"+q,b+"a:"+q,b+"b:"+q];};last=(S[b+"n"]||14)-1;}
 else{var pre=dkey(M[L[cur]].d);
 if(kind==="d"){K=function(q){return [pre+":d"+g+":"+q,pre+":dc"+g+":"+q];};last=9;}
 else{K=function(q){return [pre+":t"+g+":"+q,pre+":c"+g+":"+q,pre+":o"+g+":"+q];};last=6;}}
 var t=S[K(r)[0]]||"";
-if(!confirm((t?'"'+t+'" satırı':"Bu satır")+" silinecek ve altındaki satırlar yukarı kayacak. Devam edilsin mi?"))return;
+if(!(await askConfirm((t?'"'+t+'" satırı':"Bu satır")+" silinecek ve altındaki satırlar yukarı kayacak. Devam edilsin mi?","Sil")))return;
 for(var q=r;q<last;q++){var A=K(q+1),B=K(q);for(var i=0;i<A.length;i++){var v=S[A[i]];if(v)S[B[i]]=v;else delete S[B[i]];}}
 K(last).forEach(function(k){delete S[k];});
 save();if(kind==="u")showCust(g);else render(cur,true);
@@ -356,7 +374,7 @@ setTimeout(function(){URL.revokeObjectURL(a.href);a.remove();},500);
 var sv=$("sv");
 function flash(t){sv.textContent=t;setTimeout(function(){sv.textContent="Kaydet";},1800);}
 async function saveAs(){
-if(NATIVE){var r=await window.agendaAPI.saveAs(pack());if(r&&r.ok){filePath=r.path;fileName=r.name;lastSaved=Date.now();try{localStorage.setItem(KEY+":dirty","0");}catch(e){}showStatus();flash("Kaydedildi ✓");}return;}
+if(NATIVE){var r=await window.agendaAPI.saveAs(pack());if(r&&r.ok){if(r.backup){flash("Yedek alındı ✓");return;}filePath=r.path;fileName=r.name;lastSaved=Date.now();try{localStorage.setItem(KEY+":dirty","0");}catch(e){}showStatus();flash("Kaydedildi ✓");}return;}
 if(!API){download();flash("İndirildi");return;}
 try{
 var h=await window.showSaveFilePicker(Object.assign({suggestedName:"Haftalik-Plan-Verisi.json",startIn:"documents"},PICK));
@@ -368,30 +386,32 @@ async function openFile(){
 if(NATIVE){
 var r=await window.agendaAPI.open();if(!r||!r.ok)return;
 var o;try{o=JSON.parse(r.text);}catch(e){o=null;}
-if(!valid(o)){alert("Bu dosya geçerli bir Haftalık Plan dosyası değil.");return;}
-if(!confirm("“"+r.name+"” açılacak. Ekrandaki mevcut veriler dosyadaki verilerle değiştirilecek. Devam edilsin mi?"))return;
-await window.agendaAPI.use(r.path);
-S=o.data;filePath=r.path;fileName=r.name;saveLocal(true);lastSaved=o.savedAt||0;showStatus();refresh();return;
+if(!valid(o)){await showMsg("Bu dosya geçerli bir Haftalık Plan dosyası değil.");return;}
+if(!(await askConfirm("“"+r.name+"” açılacak. Ekrandaki mevcut veriler dosyadaki verilerle değiştirilecek. Devam edilsin mi?","Aç")))return;
+var SQ=!!(BOOT&&BOOT.mode==="sqlite");
+if(!SQ)await window.agendaAPI.use(r.path);
+S=o.data;if(!SQ){filePath=r.path;fileName=r.name;}
+saveLocal(false);await writeFile(false);lastSaved=Date.now();showStatus();refresh();return;
 }
 if(!API){rf.value="";rf.click();return;}
 try{
 var hs=await window.showOpenFilePicker(Object.assign({multiple:false,startIn:"documents"},PICK)),h=hs[0];
 var f=await h.getFile(),o;
 try{o=JSON.parse(await f.text());}catch(e){o=null;}
-if(!valid(o)){alert("Bu dosya geçerli bir Haftalık Plan dosyası değil.");return;}
-if(!confirm("“"+f.name+"” açılacak. Ekrandaki mevcut veriler dosyadaki verilerle değiştirilecek. Devam edilsin mi?"))return;
+if(!valid(o)){await showMsg("Bu dosya geçerli bir Haftalık Plan dosyası değil.");return;}
+if(!(await askConfirm("“"+f.name+"” açılacak. Ekrandaki mevcut veriler dosyadaki verilerle değiştirilecek. Devam edilsin mi?","Aç")))return;
 S=o.data;fh=h;fileName=f.name;idbSet(HK,h);saveLocal(true);
 perm=await hasPerm(true);lastSaved=o.savedAt||0;showStatus();refresh();
-}catch(e){if(e&&e.name==="AbortError")return;alert("Dosya açılamadı.");}
+}catch(e){if(e&&e.name==="AbortError")return;await showMsg("Dosya açılamadı.");}
 }
 var rf=$("rf");
 rf.addEventListener("change",function(){
 var f=rf.files&&rf.files[0];if(!f)return;
 var r=new FileReader();
-r.onload=function(){
+r.onload=async function(){
 var o;try{o=JSON.parse(r.result);}catch(e){o=null;}
-if(!valid(o)){alert("Bu dosya geçerli bir Haftalık Plan dosyası değil.");return;}
-if(!confirm("Ekrandaki mevcut veriler dosyadaki verilerle değiştirilecek. Devam edilsin mi?"))return;
+if(!valid(o)){await showMsg("Bu dosya geçerli bir Haftalık Plan dosyası değil.");return;}
+if(!(await askConfirm("Ekrandaki mevcut veriler dosyadaki verilerle değiştirilecek. Devam edilsin mi?","Aç")))return;
 S=o.data;saveLocal(true);refresh();
 };
 r.readAsText(f);
@@ -441,6 +461,7 @@ var o=null;try{o=r.text?JSON.parse(r.text):null;}catch(e){o=null;}
 if(valid(o)&&localStorage.getItem(KEY+":dirty")!=="1"){S=o.data;lastSaved=o.savedAt||0;saveLocal(true);}
 render(weekOfToday());
 if(!valid(o)||localStorage.getItem(KEY+":dirty")==="1")writeFile(false);else showStatus();
+if(r.mode==="json"&&r.error)showStatus("SQLite başlatılamadı, geçici olarak JSON ile devam ediliyor: "+r.error);
 }).catch(function(){render(weekOfToday());});
 }else{render(weekOfToday());}
 </script>

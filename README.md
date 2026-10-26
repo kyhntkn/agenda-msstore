@@ -8,6 +8,13 @@ npm install
 npm start
 ```
 
+## Veri depolama
+
+Plan verisi yerel bir **SQLite** veritabanında tutulur: `Belgeler\Haftalik-Plan\Haftalik-Plan.db`
+(`sql.js` ile; derleme sırasında yerel modül gerekmez). Eski sürümün JSON dosyası ilk açılışta otomatik
+içeri alınır ve `*.eski.json` adıyla saklanır. **Yedek Al / Aç** düğmeleri JSON yedeği ile çalışır.
+Tamamen sıfırlamak için uygulamayı kapatıp `.db` dosyasını silmek yeterlidir.
+
 ## Microsoft Store'a yükleme
 
 1. [Partner Center](https://partner.microsoft.com/dashboard) → **Apps and games → New product → MSIX or PWA app** ile uygulama adını rezerve et.
