@@ -13,4 +13,4 @@ Haftalık Planlayıcı, planlarınızı yalnızca **kendi bilgisayarınızdaki**
 
 Verilerinizi dilediğiniz zaman JSON dosyasını silerek kaldırabilirsiniz.
 
-İletişim: <kyhntkn@windowslive.com>
+İletişim: <E-POSTA ADRESİNİZİ BURAYA YAZIN>

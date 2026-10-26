@@ -111,7 +111,7 @@ html,body{background:#fff}
 <button id="op" type="button" title="Bilgisayarındaki bir kayıt dosyasını aç">Aç</button>
 <button id="sv" type="button" title="Notları kayıt dosyasına kaydeder">Kaydet</button>
 <button id="sa" type="button" title="Yeni bir dosya adı/konumu seçerek kaydeder">Farklı Kaydet</button>
-<button id="ac" type="button">Müşteri Ekle</button>
+<button id="ac" type="button">Sayfa Ekle</button>
 <input id="rf" type="file" accept=".json,application/json" hidden>
 <span id="st" class="hint"></span>
 </div>
@@ -180,7 +180,7 @@ return '<div class="top"><div class="title"><div><div class="lab">HAFTALIK PLAN<
 function buildCust(c){
 var id=c.id,n=S["cust:"+id+":n"]||14,rows="";
 for(var r=0;r<n;r++){var b="cust:"+id+":";rows+='<div class="row"><input type="checkbox" class="cb" data-k="'+b+'c:'+r+'" aria-label="Tamamlandı"><input type="text" class="tx" data-k="'+b+'t:'+r+'" aria-label="Konu"><input type="date" data-k="'+b+'a:'+r+'" aria-label="Talep tarihi"><input type="date" data-k="'+b+'b:'+r+'" aria-label="Bitiş tarihi"><button type="button" class="x" data-del="u|'+id+'|'+r+'" aria-label="Satırı sil" title="Satırı sil">×</button></div>';}
-return '<div class="chead"><div><div class="lab">MÜŞTERİ SAYFASI</div><input id="cname" class="cn" type="text" value="'+esc(c.name)+'" aria-label="Müşteri adı"></div><button type="button" class="dc np" data-delc="'+id+'">Müşteriyi sil</button></div>'
+return '<div class="chead"><div><div class="lab">SAYFA</div><input id="cname" class="cn" type="text" value="'+esc(c.name)+'" aria-label="Sayfa adı"></div><button type="button" class="dc np" data-delc="'+id+'">Sayfayı sil</button></div>'
 +'<div class="fu"><div class="fh df"><span style="flex:1">Takip Edilecek Konular</span><span class="dl">TALEP TARİHİ</span><span class="dl">BİTİŞ TARİHİ</span><span style="width:22px;flex:none"></span></div><div class="cl">'+rows+'</div><button type="button" class="ad np" data-addrow="'+id+'">+ Satır ekle</button></div>';
 }
 var ZOOM=null;try{var zz=parseFloat(localStorage.getItem(KEY+":zoom"));if(zz>0)ZOOM=zz;}catch(e){}
@@ -191,7 +191,7 @@ function stepZoom(d){var n=Math.round(((ZOOM||autoScale())+d)*100)/100;setZoom(M
 function restore(sh){sh.querySelectorAll("[data-k]").forEach(function(el){var v=S[el.getAttribute("data-k")];if(v===undefined)return;if(el.type==="checkbox")el.checked=!!v;else el.value=v;});}
 function renderTabs(){
 var h='<button type="button" class="tab'+(view==="week"?" on":"")+'" data-tab="week">Haftalık Plan</button>',list=getList();
-list.forEach(function(c,i){h+='<div class="tabrow"><button type="button" class="tab'+(view===c.id?" on":"")+'" data-tab="'+esc(c.id)+'" title="'+esc(c.name)+'">'+esc(c.name)+'</button><button type="button" class="tabmove" data-move="'+esc(c.id)+'|-1" title="Müşteriyi yukarı taşı" aria-label="Müşteriyi yukarı taşı"'+(i===0?' disabled':'')+'>↑</button><button type="button" class="tabmove" data-move="'+esc(c.id)+'|1" title="Müşteriyi aşağı taşı" aria-label="Müşteriyi aşağı taşı"'+(i===list.length-1?' disabled':'')+'>↓</button></div>';});
+list.forEach(function(c,i){h+='<div class="tabrow"><button type="button" class="tab'+(view===c.id?" on":"")+'" data-tab="'+esc(c.id)+'" title="'+esc(c.name)+'">'+esc(c.name)+'</button><button type="button" class="tabmove" data-move="'+esc(c.id)+'|-1" title="Sayfayı yukarı taşı" aria-label="Sayfayı yukarı taşı"'+(i===0?' disabled':'')+'>↑</button><button type="button" class="tabmove" data-move="'+esc(c.id)+'|1" title="Sayfayı aşağı taşı" aria-label="Sayfayı aşağı taşı"'+(i===list.length-1?' disabled':'')+'>↓</button></div>';});
 $("tabs").innerHTML=h;
 }
 function updNav(){var c=document.querySelector("#sheet .cols"),b=document.querySelector('#sheet [data-nav="-1"]');if(c&&b)b.disabled=c.scrollLeft<=1;}
@@ -202,13 +202,13 @@ sh.innerHTML=build(L[p]);restore(sh);
 var c=sh.querySelector(".cols");if(c){if(sl)c.scrollLeft=sl;c.addEventListener("scroll",updNav);updNav();}
 var e=M[L[p]];
 $("sel").value=String(p);$("prev").disabled=p<=0;$("next").disabled=p>=L.length-1;
-document.title="Haftalık Plan – "+e.y+" / "+e.w+". Hafta";renderTabs();fit();
+document.title="Haftalık Planlayıcı – "+e.y+" / "+e.w+". Hafta";renderTabs();fit();
 }
 function showCust(id){
 var c=getList().filter(function(x){return x.id===id;})[0];
 if(!c){render(cur);return;}
 view=id;var sh=$("sheet");sh.innerHTML=buildCust(c);restore(sh);
-document.title="Müşteri – "+c.name;renderTabs();fit();
+document.title="Sayfa – "+c.name;renderTabs();fit();
 }
 function refresh(){if(view==="week")render(cur,true);else showCust(view);}
 function addCol(){var pre=dkey(M[L[cur]].d);S[pre+":ncols"]=ncols(pre)+1;save();render(cur,true);var c=document.querySelector("#sheet .cols");if(c)c.scrollTo({left:c.scrollWidth,behavior:"smooth"});}
@@ -222,12 +222,12 @@ inp.addEventListener("keydown",function(e){if(e.key==="Enter")done(inp.value);el
 document.body.appendChild(o);inp.focus();
 });}
 async function addCustomer(){
-var nm=await askText("Müşteri adı","");if(nm===null)return;nm=nm.trim();if(!nm)return;
+var nm=await askText("Sayfa adı","");if(nm===null)return;nm=nm.trim();if(!nm)return;
 var id="m"+Date.now().toString(36),l=getList().slice();l.push({id:id,name:nm});S["cust:list"]=l;save();showCust(id);
 }
 function delCustomer(id){
 var c=getList().filter(function(x){return x.id===id;})[0];if(!c)return;
-if(!confirm('"'+c.name+'" müşterisi ve tüm satırları silinecek. Devam edilsin mi?'))return;
+if(!confirm('"'+c.name+'" sayfası ve tüm satırları silinecek. Devam edilsin mi?'))return;
 S["cust:list"]=getList().filter(function(x){return x.id!==id;});
 Object.keys(S).forEach(function(k){if(k.indexOf("cust:"+id+":")===0)delete S[k];});
 save();render(cur);
