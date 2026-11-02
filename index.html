@@ -206,9 +206,9 @@ return '<div class="top"><div class="title"><div><div class="lab">HAFTALIK PLAN<
 }
 function buildCust(c){
 var id=c.id,n=S["cust:"+id+":n"]||14,rows="";
-for(var r=0;r<n;r++){var b="cust:"+id+":";rows+='<div class="row"><input type="checkbox" class="cb" data-k="'+b+'c:'+r+'" aria-label="Tamamlandı"><input type="text" class="tx" data-k="'+b+'t:'+r+'" aria-label="Konu"><input type="date" data-k="'+b+'a:'+r+'" aria-label="Talep tarihi"><input type="date" data-k="'+b+'b:'+r+'" aria-label="Bitiş tarihi"><button type="button" class="x" data-del="u|'+id+'|'+r+'" aria-label="Satırı sil" title="Satırı sil">×</button></div>';}
+for(var r=0;r<n;r++){var b="cust:"+id+":";rows+='<div class="row"><input type="checkbox" class="cb" data-k="'+b+'c:'+r+'" aria-label="Tamamlandı"><input type="text" class="tx" data-k="'+b+'t:'+r+'" aria-label="Konu"><button type="button" class="x" data-del="u|'+id+'|'+r+'" aria-label="Satırı sil" title="Satırı sil">×</button></div>';}
 return '<div class="chead"><div><div class="lab">SAYFA</div><input id="cname" class="cn" type="text" value="'+esc(c.name)+'" aria-label="Sayfa adı"></div><button type="button" class="dc np" data-delc="'+id+'">Sayfayı sil</button></div>'
-+'<div class="fu"><div class="fh df"><span style="flex:1">Takip Edilecek Konular</span><span class="dl">TALEP TARİHİ</span><span class="dl">BİTİŞ TARİHİ</span><span style="width:22px;flex:none"></span></div><div class="cl">'+rows+'</div><button type="button" class="ad np" data-addrow="'+id+'">+ Satır ekle</button></div>';
++'<div class="fu"><div class="fh df"><span style="flex:1">Takip Edilecek Konular</span><span style="width:22px;flex:none"></span></div><div class="cl">'+rows+'</div><button type="button" class="ad np" data-addrow="'+id+'">+ Satır ekle</button></div>';
 }
 var ZOOM=null;try{var zz=parseFloat(localStorage.getItem(KEY+":zoom"));if(zz>0)ZOOM=zz;}catch(e){}
 function autoScale(){var bh=$("bar").offsetHeight||60;return Math.min(1,(window.innerWidth-24)/(1123+118),(window.innerHeight-bh-40)/794);}
