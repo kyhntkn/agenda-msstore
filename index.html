@@ -82,6 +82,16 @@ input[type=date]{font:inherit;font-size:13px;color:#1d2433;border:1px solid #cfd
 .cl{flex:1;overflow-y:auto;padding:0 14px;display:flex;flex-direction:column;min-height:0}
 .cl .row{flex:none;height:40px}
 .ad{font:inherit;font-size:13px;font-weight:700;border:0;border-top:1px solid #e1e5ec;background:#f6f8fa;color:#0f766e;padding:8px;cursor:pointer}
+.cl .row.cr{height:auto;min-height:40px;align-items:flex-start;padding:6px 0;box-sizing:border-box}
+.cl .row.cr .cb{margin-top:6px}
+.cl .row.cr.sub{padding-left:30px}
+.cl .row.cr .x,.cl .row.cr .sb,.cl .row.cr .sp{margin-top:3px}
+.tw{flex:1;min-width:0;box-sizing:border-box;font:inherit;font-size:14px;line-height:20px;color:#1d2433;border:0;background:transparent;resize:none;overflow:hidden;padding:4px;min-height:28px;height:28px;outline:none;white-space:pre-wrap;overflow-wrap:anywhere;display:block}
+.tw:focus{background:rgba(15,118,110,.07)}
+.cb:checked + .tw{text-decoration:line-through;text-decoration-thickness:1.5px;color:#8a94a3}
+.sb{appearance:none;-webkit-appearance:none;flex:none;border:0;background:transparent;color:#0f766e;font:inherit;font-size:16px;line-height:1;width:22px;height:22px;border-radius:4px;cursor:pointer;padding:0}
+.sb:hover,.sb:focus-visible{background:rgba(15,118,110,.12);outline:none}
+.sp{flex:none;width:22px}
 input.mi{}
 .mdl{position:fixed;inset:0;background:rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center;z-index:10000;font-family:'IBM Plex Sans','Segoe UI',sans-serif}
 .mdl .box{background:#fff;color:#1d2433;border-radius:8px;padding:18px;width:360px;max-width:90vw;box-shadow:0 8px 32px rgba(0,0,0,.3)}
@@ -93,7 +103,9 @@ input.mi{}
 @media print{
 @page{size:A4 landscape;margin:0}
 html,body{background:#fff}
-#bar,#tabs,.np,.x{display:none!important}
+#bar,#tabs,.np,.x,.sb{display:none!important}
+.cl{overflow:visible!important}
+.fu{overflow:visible!important}
 #wrap{display:block;margin:0;padding:0}
 #stage{height:auto!important;width:auto!important;overflow:visible}
 #sheet{transform:none!important;box-shadow:none}
@@ -206,9 +218,9 @@ return '<div class="top"><div class="title"><div><div class="lab">HAFTALIK PLAN<
 }
 function buildCust(c){
 var id=c.id,n=S["cust:"+id+":n"]||14,rows="";
-for(var r=0;r<n;r++){var b="cust:"+id+":";rows+='<div class="row"><input type="checkbox" class="cb" data-k="'+b+'c:'+r+'" aria-label="Tamamlandı"><input type="text" class="tx" data-k="'+b+'t:'+r+'" aria-label="Konu"><button type="button" class="x" data-del="u|'+id+'|'+r+'" aria-label="Satırı sil" title="Satırı sil">×</button></div>';}
+for(var r=0;r<n;r++){var b="cust:"+id+":";var sub=S[b+"i:"+r]?1:0;rows+='<div class="row cr'+(sub?" sub":"")+'"><input type="checkbox" class="cb" data-k="'+b+'c:'+r+'" aria-label="Tamamlandı"><textarea class="tw" rows="1" data-k="'+b+'t:'+r+'" aria-label="Konu"></textarea><input type="date" data-k="'+b+'a:'+r+'" aria-label="Tarih">'+(sub?'<span class="sp"></span>':'<button type="button" class="sb np" data-sub="'+id+'|'+r+'" aria-label="Alt madde ekle" title="Alt madde ekle">↳</button>')+'<button type="button" class="x" data-del="u|'+id+'|'+r+'" aria-label="Satırı sil" title="Satırı sil">×</button></div>';}
 return '<div class="chead"><div><div class="lab">SAYFA</div><input id="cname" class="cn" type="text" value="'+esc(c.name)+'" aria-label="Sayfa adı"></div><button type="button" class="dc np" data-delc="'+id+'">Sayfayı sil</button></div>'
-+'<div class="fu"><div class="fh df"><span style="flex:1">Takip Edilecek Konular</span><span style="width:22px;flex:none"></span></div><div class="cl">'+rows+'</div><button type="button" class="ad np" data-addrow="'+id+'">+ Satır ekle</button></div>';
++'<div class="fu"><div class="fh df"><span style="flex:1">Takip Edilecek Konular</span><span class="dl">TARİH</span><span style="width:50px;flex:none"></span></div><div class="cl">'+rows+'</div><button type="button" class="ad np" data-addrow="'+id+'">+ Satır ekle</button></div>';
 }
 var ZOOM=null;try{var zz=parseFloat(localStorage.getItem(KEY+":zoom"));if(zz>0)ZOOM=zz;}catch(e){}
 function autoScale(){var bh=$("bar").offsetHeight||60;return Math.min(1,(window.innerWidth-24)/(1123+118),(window.innerHeight-bh-40)/794);}
@@ -231,10 +243,19 @@ var e=M[L[p]];
 $("sel").value=String(p);$("prev").disabled=p<=0;$("next").disabled=p>=L.length-1;
 document.title="Haftalık Planlayıcı – "+e.y+" / "+e.w+". Hafta";renderTabs();fit();
 }
+function autoGrow(el){el.style.height="auto";el.style.height=Math.max(28,el.scrollHeight)+"px";}
+function growAll(){var l=document.querySelectorAll("textarea.tw");for(var i=0;i<l.length;i++)autoGrow(l[i]);}
+try{if(document.fonts&&document.fonts.ready)document.fonts.ready.then(growAll);}catch(e){}
+function addSub(id,r){var b="cust:"+id+":",n=S[b+"n"]||14,K=["t","c","a","b","i"];
+var used=K.some(function(k){var v=S[b+k+":"+(n-1)];return v!==undefined&&v!==""&&v!==false;});
+if(used||r+1>n-1){n++;S[b+"n"]=n;}
+for(var q=n-1;q>r+1;q--)K.forEach(function(k){var v=S[b+k+":"+(q-1)];if(v!==undefined&&v!==""&&v!==false)S[b+k+":"+q]=v;else delete S[b+k+":"+q];});
+K.forEach(function(k){delete S[b+k+":"+(r+1)];});S[b+"i:"+(r+1)]=1;save();showCust(id);
+var ta=document.querySelector('textarea.tw[data-k="'+b+"t:"+(r+1)+'"]');if(ta)ta.focus();}
 function showCust(id){
 var c=getList().filter(function(x){return x.id===id;})[0];
 if(!c){render(cur);return;}
-view=id;var sh=$("sheet");sh.innerHTML=buildCust(c);restore(sh);
+view=id;var sh=$("sheet");sh.innerHTML=buildCust(c);restore(sh);growAll();
 document.title="Sayfa – "+c.name;renderTabs();fit();
 }
 function refresh(){if(view==="week")render(cur,true);else showCust(view);}
@@ -272,21 +293,25 @@ save();render(cur);
 }
 async function delRow(kind,g,r){
 var K,last;
-if(kind==="u"){var b="cust:"+g+":";K=function(q){return [b+"t:"+q,b+"c:"+q,b+"a:"+q,b+"b:"+q];};last=(S[b+"n"]||14)-1;}
+if(kind==="u"){var b="cust:"+g+":";K=function(q){return [b+"t:"+q,b+"c:"+q,b+"a:"+q,b+"b:"+q,b+"i:"+q];};last=(S[b+"n"]||14)-1;}
 else{var pre=dkey(M[L[cur]].d);
 if(kind==="d"){K=function(q){return [pre+":d"+g+":"+q,pre+":dc"+g+":"+q];};last=9;}
 else{K=function(q){return [pre+":t"+g+":"+q,pre+":c"+g+":"+q,pre+":o"+g+":"+q];};last=6;}}
-var t=S[K(r)[0]]||"";
-if(!(await askConfirm((t?'"'+t+'" satırı':"Bu satır")+" silinecek ve altındaki satırlar yukarı kayacak. Devam edilsin mi?","Sil")))return;
+var t=S[K(r)[0]]||"",cnt=1;
+if(kind==="u"&&!S[b+"i:"+r]){while(r+cnt<=last&&S[b+"i:"+(r+cnt)])cnt++;}
+if(!(await askConfirm((t?'"'+t+'" satırı':"Bu satır")+(cnt>1?" ve alt maddeleri":"")+" silinecek ve altındaki satırlar yukarı kayacak. Devam edilsin mi?","Sil")))return;
 if(kind!=="u"&&kind!=="d"&&t){var hh=Array.isArray(S[pre+":h"])?S[pre+":h"]:[];if(hh.indexOf(t)<0)hh.push(t);S[pre+":h"]=hh;}
-for(var q=r;q<last;q++){var A=K(q+1),B=K(q);for(var i=0;i<A.length;i++){var v=S[A[i]];if(v)S[B[i]]=v;else delete S[B[i]];}}
-K(last).forEach(function(k){delete S[k];});
+for(var z=0;z<cnt;z++){for(var q=r;q<last;q++){var A=K(q+1),B=K(q);for(var i=0;i<A.length;i++){var v=S[A[i]];if(v)S[B[i]]=v;else delete S[B[i]];}}
+K(last).forEach(function(k){delete S[k];});}
 save();if(kind==="u")showCust(g);else render(cur,true);
 }
 var sheet=$("sheet");
 sheet.addEventListener("input",function(e){var el=e.target;
 if(el.id==="cname"){var c=getList().filter(function(x){return x.id===view;})[0];if(c){c.name=el.value;save();renderTabs();}return;}
-if(!el.getAttribute("data-k"))return;S[el.getAttribute("data-k")]=el.type==="checkbox"?el.checked:el.value;save();});
+if(!el.getAttribute("data-k"))return;
+if(el.classList&&el.classList.contains("tw")){if(el.value.indexOf("\n")>=0)el.value=el.value.replace(/\s*\n\s*/g," ");autoGrow(el);}
+S[el.getAttribute("data-k")]=el.type==="checkbox"?el.checked:el.value;save();});
+sheet.addEventListener("keydown",function(e){if(e.key==="Enter"&&e.target.classList&&e.target.classList.contains("tw"))e.preventDefault();});
 sheet.addEventListener("change",function(e){var el=e.target;if(el.type==="checkbox"&&el.getAttribute("data-k")){S[el.getAttribute("data-k")]=el.checked;save();}});
 sheet.addEventListener("click",function(e){
 var t=e.target;if(!t.closest)return;var b;
@@ -295,6 +320,7 @@ if((b=t.closest("[data-nav]"))){var c=sheet.querySelector(".cols"),st=c.clientWi
 if(b.getAttribute("data-nav")==="-1")c.scrollBy({left:-st,behavior:"smooth"});
 else if(c.scrollLeft+c.clientWidth>=c.scrollWidth-4)addCol();
 else c.scrollBy({left:st,behavior:"smooth"});return;}
+if((b=t.closest("[data-sub]"))){var sp=b.getAttribute("data-sub").split("|");addSub(sp[0],parseInt(sp[1],10));return;}
 if((b=t.closest("[data-addrow]"))){var id=b.getAttribute("data-addrow");S["cust:"+id+":n"]=(S["cust:"+id+":n"]||14)+1;save();showCust(id);return;}
 if((b=t.closest("[data-delc]"))){delCustomer(b.getAttribute("data-delc"));}
 });
