@@ -28,6 +28,8 @@ body{margin:0;background:var(--bg);font-family:'IBM Plex Sans','Segoe UI',sans-s
 .tabmove{appearance:none;-webkit-appearance:none;border:0;border-radius:4px;background:var(--tab);color:var(--tab-ink);font:inherit;font-size:12px;line-height:1;width:20px;flex:none;cursor:pointer;padding:0}
 .tabmove:hover{filter:brightness(.92)}
 .tabmove:disabled{opacity:.25;cursor:default}
+.tab.pend{background:#f5c26b;color:#4a2800}
+.tab.pend.on{background:#d97706;color:#fff}
 .tab.on{background:var(--acc);color:#fff;font-weight:700}
 #sheet{width:1123px;height:794px;box-sizing:border-box;padding:32px;display:flex;flex-direction:column;gap:14px;background:#fff;color:#1d2433;transform-origin:top left;box-shadow:0 4px 24px rgba(0,0,0,.18)}
 .df{font-family:'Bricolage Grotesque','Segoe UI',sans-serif}
@@ -47,6 +49,10 @@ body{margin:0;background:var(--bg);font-family:'IBM Plex Sans','Segoe UI',sans-s
 .day{border:1px solid #cfd5df;border-radius:6px;display:flex;flex-direction:column;overflow:hidden}
 .dh{display:flex;justify-content:space-between;align-items:baseline;background:#f1f4f8;padding:8px 12px;border-bottom:1px solid #cfd5df}
 .dh b{font-size:16px}.dh span{font-size:13px;color:#0f766e;font-weight:700}
+.dh .dr{display:flex;align-items:center;gap:6px}
+.dadd{appearance:none;-webkit-appearance:none;border:1px solid #0f766e;background:#fff;color:#0f766e;font:inherit;font-size:15px;font-weight:700;line-height:1;width:22px;height:20px;border-radius:4px;cursor:pointer;padding:0}
+.dadd:hover,.dadd:focus-visible{background:#0f766e;color:#fff;outline:none}
+.dadd:disabled{opacity:.3;cursor:default}
 .ln{flex:1;border-bottom:1px solid #e1e5ec;display:flex;align-items:center;gap:8px;padding:0 8px}
 .ln:last-child{border-bottom:0}
 input[type=text]{font:inherit;font-size:13px;color:#1d2433;border:0;background:transparent;outline:none;width:100%;min-width:0;padding:0 10px}
@@ -103,7 +109,7 @@ input.mi{}
 @media print{
 @page{size:A4 landscape;margin:0}
 html,body{background:#fff}
-#bar,#tabs,.np,.x,.sb{display:none!important}
+#bar,#tabs,.np,.x,.sb,.dadd{display:none!important}
 .cl{overflow:visible!important}
 .fu{overflow:visible!important}
 #wrap{display:block;margin:0;padding:0}
@@ -208,8 +214,8 @@ var tsz=title.length<22?28:19;
 var mc=SH.map(function(m,i){return '<div class="mc'+(hm[i]?' on':'')+'">'+m+'</div>';}).join("");
 var ws=[];M.forEach(function(x,j){for(var q=0;q<5;q++){var d=addDays(x.d,q);if(d.getMonth()===anc.getMonth()&&d.getFullYear()===Y){ws.push(j);break;}}});
 var wc=ws.map(function(j){return '<div class="wc'+(j===ix?' on':'')+'"><div style="font-size:13px;font-weight:700">H'+M[j].w+'</div><div style="font-size:9px">'+rng(M[j].d)+'</div></div>';}).join("");
-var days=wd.map(function(d,i){var l="";for(var r=1;r<=9;r++){l+='<div class="ln"><input type="checkbox" class="cb" data-k="'+pre+':dc'+i+':'+r+'" aria-label="Tamamlandı"><input type="text" class="tx" data-k="'+pre+':d'+i+':'+r+'" aria-label="'+DAYS[i]+' not '+r+'"><button type="button" class="x" data-del="d|'+i+'|'+r+'" aria-label="Satırı sil" title="Satırı sil">×</button></div>';}
-return '<div class="day"><div class="dh"><b class="df">'+DAYS[i]+'</b><span>'+d.getDate()+' '+SH[d.getMonth()]+'</span></div>'+l+'</div>';}).join("");
+var days=wd.map(function(d,i){var l="",dn=S[pre+":dn"+i]||9;for(var r=1;r<=dn;r++){l+='<div class="ln"><input type="checkbox" class="cb" data-k="'+pre+':dc'+i+':'+r+'" aria-label="Tamamlandı"><input type="text" class="tx" data-k="'+pre+':d'+i+':'+r+'" aria-label="'+DAYS[i]+' not '+r+'"><button type="button" class="x" data-del="d|'+i+'|'+r+'" aria-label="Satırı sil" title="Satırı sil">×</button></div>';}
+return '<div class="day"><div class="dh"><b class="df">'+DAYS[i]+'</b><span class="dr">'+d.getDate()+' '+SH[d.getMonth()]+'<button type="button" class="dadd np" data-addday="'+i+'" title="Bu güne satır ekle" aria-label="Bu güne satır ekle"'+(dn>=14?' disabled':'')+'>+</button></span></div>'+l+'</div>';}).join("");
 var n=ncols(pre),cols="";for(var c=0;c<n;c++){var rows="";for(var r=0;r<7;r++){rows+='<div class="row"><input type="checkbox" class="cb" data-k="'+pre+':c'+c+':'+r+'" aria-label="Tamamlandı"><input type="text" class="tx" data-k="'+pre+':t'+c+':'+r+'" aria-label="Takip konusu"><button type="button" class="x" data-del="t|'+c+'|'+r+'" aria-label="Satırı sil" title="Satırı sil">×</button></div>';}cols+='<div class="col">'+rows+'</div>';}
 return '<div class="top"><div class="title"><div><div class="lab">HAFTALIK PLAN</div><div class="dt df" style="font-size:'+tsz+'px">'+title+'</div></div><div><div class="num df">'+wk+'</div><div class="numl">HAFTA / '+CNT[Y]+'</div></div></div>'
 +'<div class="panel" style="flex:1"><div class="pl">AY — '+Y+'</div><div class="g" style="grid-template-columns:repeat(12,1fr)">'+mc+'</div></div>'
@@ -228,9 +234,11 @@ function fit(){var s=ZOOM||autoScale();$("stage").style.width=(1123*s)+"px";$("s
 function setZoom(z){ZOOM=z;try{if(z)localStorage.setItem(KEY+":zoom",String(z));else localStorage.removeItem(KEY+":zoom");}catch(e){}fit();}
 function stepZoom(d){var n=Math.round(((ZOOM||autoScale())+d)*100)/100;setZoom(Math.max(0.4,Math.min(2,n)));}
 function restore(sh){sh.querySelectorAll("[data-k]").forEach(function(el){var v=S[el.getAttribute("data-k")];if(v===undefined)return;if(el.type==="checkbox")el.checked=!!v;else el.value=v;});}
+function pendingCust(id){var b="cust:"+id+":",n=S[b+"n"]||14;for(var r=0;r<n;r++){var t=S[b+"t:"+r];if(t&&String(t).trim()&&!S[b+"c:"+r])return true;}return false;}
+function updTabs(){var l=document.querySelectorAll("#tabs [data-tab]");for(var i=0;i<l.length;i++){var id=l[i].getAttribute("data-tab");if(id!=="week")l[i].classList.toggle("pend",pendingCust(id));}}
 function renderTabs(){
 var h='<button type="button" class="tab'+(view==="week"?" on":"")+'" data-tab="week">Haftalık Plan</button>',list=getList();
-list.forEach(function(c,i){h+='<div class="tabrow"><button type="button" class="tab'+(view===c.id?" on":"")+'" data-tab="'+esc(c.id)+'" title="'+esc(c.name)+'">'+esc(c.name)+'</button><button type="button" class="tabmove" data-move="'+esc(c.id)+'|-1" title="Sayfayı yukarı taşı" aria-label="Sayfayı yukarı taşı"'+(i===0?' disabled':'')+'>↑</button><button type="button" class="tabmove" data-move="'+esc(c.id)+'|1" title="Sayfayı aşağı taşı" aria-label="Sayfayı aşağı taşı"'+(i===list.length-1?' disabled':'')+'>↓</button></div>';});
+list.forEach(function(c,i){h+='<div class="tabrow"><button type="button" class="tab'+(view===c.id?" on":"")+(pendingCust(c.id)?" pend":"")+'" data-tab="'+esc(c.id)+'" title="'+esc(c.name)+'">'+esc(c.name)+'</button><button type="button" class="tabmove" data-move="'+esc(c.id)+'|-1" title="Sayfayı yukarı taşı" aria-label="Sayfayı yukarı taşı"'+(i===0?' disabled':'')+'>↑</button><button type="button" class="tabmove" data-move="'+esc(c.id)+'|1" title="Sayfayı aşağı taşı" aria-label="Sayfayı aşağı taşı"'+(i===list.length-1?' disabled':'')+'>↓</button></div>';});
 $("tabs").innerHTML=h;
 }
 function updNav(){var c=document.querySelector("#sheet .cols"),b=document.querySelector('#sheet [data-nav="-1"]');if(c&&b)b.disabled=c.scrollLeft<=1;}
@@ -295,7 +303,7 @@ async function delRow(kind,g,r){
 var K,last;
 if(kind==="u"){var b="cust:"+g+":";K=function(q){return [b+"t:"+q,b+"c:"+q,b+"a:"+q,b+"b:"+q,b+"i:"+q];};last=(S[b+"n"]||14)-1;}
 else{var pre=dkey(M[L[cur]].d);
-if(kind==="d"){K=function(q){return [pre+":d"+g+":"+q,pre+":dc"+g+":"+q];};last=9;}
+if(kind==="d"){K=function(q){return [pre+":d"+g+":"+q,pre+":dc"+g+":"+q];};last=S[pre+":dn"+g]||9;}
 else{K=function(q){return [pre+":t"+g+":"+q,pre+":c"+g+":"+q,pre+":o"+g+":"+q];};last=6;}}
 var t=S[K(r)[0]]||"",cnt=1;
 if(kind==="u"&&!S[b+"i:"+r]){while(r+cnt<=last&&S[b+"i:"+(r+cnt)])cnt++;}
@@ -303,6 +311,7 @@ if(!(await askConfirm((t?'"'+t+'" satırı':"Bu satır")+(cnt>1?" ve alt maddele
 if(kind!=="u"&&kind!=="d"&&t){var hh=Array.isArray(S[pre+":h"])?S[pre+":h"]:[];if(hh.indexOf(t)<0)hh.push(t);S[pre+":h"]=hh;}
 for(var z=0;z<cnt;z++){for(var q=r;q<last;q++){var A=K(q+1),B=K(q);for(var i=0;i<A.length;i++){var v=S[A[i]];if(v)S[B[i]]=v;else delete S[B[i]];}}
 K(last).forEach(function(k){delete S[k];});}
+if(kind==="d"&&last>9)S[pre+":dn"+g]=last-cnt;
 save();if(kind==="u")showCust(g);else render(cur,true);
 }
 var sheet=$("sheet");
@@ -310,9 +319,9 @@ sheet.addEventListener("input",function(e){var el=e.target;
 if(el.id==="cname"){var c=getList().filter(function(x){return x.id===view;})[0];if(c){c.name=el.value;save();renderTabs();}return;}
 if(!el.getAttribute("data-k"))return;
 if(el.classList&&el.classList.contains("tw")){if(el.value.indexOf("\n")>=0)el.value=el.value.replace(/\s*\n\s*/g," ");autoGrow(el);}
-S[el.getAttribute("data-k")]=el.type==="checkbox"?el.checked:el.value;save();});
+S[el.getAttribute("data-k")]=el.type==="checkbox"?el.checked:el.value;save();if(view!=="week")updTabs();});
 sheet.addEventListener("keydown",function(e){if(e.key==="Enter"&&e.target.classList&&e.target.classList.contains("tw"))e.preventDefault();});
-sheet.addEventListener("change",function(e){var el=e.target;if(el.type==="checkbox"&&el.getAttribute("data-k")){S[el.getAttribute("data-k")]=el.checked;save();}});
+sheet.addEventListener("change",function(e){var el=e.target;if(el.type==="checkbox"&&el.getAttribute("data-k")){S[el.getAttribute("data-k")]=el.checked;save();if(view!=="week")updTabs();}});
 sheet.addEventListener("click",function(e){
 var t=e.target;if(!t.closest)return;var b;
 if((b=t.closest("[data-del]"))){var p=b.getAttribute("data-del").split("|");delRow(p[0],p[1],parseInt(p[2],10));return;}
@@ -320,6 +329,7 @@ if((b=t.closest("[data-nav]"))){var c=sheet.querySelector(".cols"),st=c.clientWi
 if(b.getAttribute("data-nav")==="-1")c.scrollBy({left:-st,behavior:"smooth"});
 else if(c.scrollLeft+c.clientWidth>=c.scrollWidth-4)addCol();
 else c.scrollBy({left:st,behavior:"smooth"});return;}
+if((b=t.closest("[data-addday]"))){var di=b.getAttribute("data-addday"),pk=dkey(M[L[cur]].d)+":dn"+di;S[pk]=Math.min(14,(S[pk]||9)+1);save();render(cur,true);return;}
 if((b=t.closest("[data-sub]"))){var sp=b.getAttribute("data-sub").split("|");addSub(sp[0],parseInt(sp[1],10));return;}
 if((b=t.closest("[data-addrow]"))){var id=b.getAttribute("data-addrow");S["cust:"+id+":n"]=(S["cust:"+id+":n"]||14)+1;save();showCust(id);return;}
 if((b=t.closest("[data-delc]"))){delCustomer(b.getAttribute("data-delc"));}
