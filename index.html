@@ -13,6 +13,8 @@ html{scroll-padding-top:env(safe-area-inset-top,0px)}
 body{margin:0;background:var(--bg);font-family:'IBM Plex Sans','Segoe UI',sans-serif}
 #bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:center;padding:10px 16px;background:var(--bar);color:var(--bar-ink);border-bottom:1px solid var(--bar-line)}
 #bar button,#bar select{font:inherit;font-size:14px;padding:8px 14px;border-radius:6px;border:1px solid var(--bar-line);background:var(--bar);color:var(--bar-ink);cursor:pointer;min-height:40px}
+#bar button{background:var(--acc);border-color:var(--acc);color:#fff;font-weight:700}
+#bar button:hover:not(:disabled){filter:brightness(.92)}
 #bar button:disabled{opacity:.45;cursor:default}
 #bar button.pri{background:var(--acc);border-color:var(--acc);color:#fff;font-weight:700}
 #bar .hint{font-size:12px;opacity:.7}
@@ -42,8 +44,11 @@ body{margin:0;background:var(--bg);font-family:'IBM Plex Sans','Segoe UI',sans-s
 .panel{border:1px solid #cfd5df;border-radius:6px;padding:7px 10px}
 .pl{font-size:10px;font-weight:700;letter-spacing:2px;margin-bottom:6px}
 .g{display:grid;gap:2px}
-.mc{padding:7px 0;text-align:center;font-size:11px;font-weight:500;border-radius:4px}
-.wc{padding:4px 0;text-align:center;border-radius:4px}
+.mc{padding:7px 0;text-align:center;font-size:11px;font-weight:500;border-radius:4px;cursor:pointer}
+.wc{padding:4px 0;text-align:center;border-radius:4px;cursor:pointer}
+.mc:hover,.wc:hover{background:rgba(15,118,110,.14)}
+.mc.on:hover,.wc.on:hover{background:#0f766e}
+.mc:focus-visible,.wc:focus-visible{outline:2px solid #0f766e;outline-offset:-2px}
 .on{background:#0f766e;color:#fff;font-weight:700}
 .days{flex:1;display:grid;grid-template-columns:repeat(5,1fr);gap:10px;min-height:0}
 .day{border:1px solid #cfd5df;border-radius:6px;display:flex;flex-direction:column;overflow:hidden}
@@ -121,6 +126,8 @@ html,body{background:#fff}
 <body>
 <div id="bar">
 <button id="prev" type="button">‹ Önceki hafta</button>
+<select id="selY" aria-label="Yıl seç"></select>
+<select id="selM" aria-label="Ay seç"></select>
 <select id="sel" aria-label="Hafta seç"></select>
 <button id="next" type="button">Sonraki hafta ›</button>
 <button id="today" type="button">Bu hafta</button>
@@ -147,7 +154,7 @@ function esc(t){return String(t).replace(/&/g,"&amp;").replace(/</g,"&lt;").repl
 var M=[];
 for(var k=0;;k++){var d0=new Date(2025,11,29+7*k);if(d0.getFullYear()>2031)break;var th=addDays(d0,3),y=th.getFullYear();var doy=Math.round((new Date(y,th.getMonth(),th.getDate())-new Date(y,0,1))/864e5);M.push({d:d0,y:y,w:Math.floor(doy/7)+1});}
 var CNT={};M.forEach(function(e){CNT[e.y]=(CNT[e.y]||0)+1;});
-var START=new Date(2026,9,12),L=[];
+var START=new Date(2025,11,29),L=[];
 M.forEach(function(e,i){if(e.y<=2030&&e.d>=START)L.push(i);});
 function rng(m){var f=addDays(m,4);return m.getMonth()===f.getMonth()?m.getDate()+"–"+f.getDate()+" "+SH[m.getMonth()]:m.getDate()+" "+SH[m.getMonth()]+"–"+f.getDate()+" "+SH[f.getMonth()];}
 var S={};
@@ -211,9 +218,9 @@ if(mon.getMonth()===fri.getMonth())title=mon.getDate()+" – "+fri.getDate()+" "
 else if(mon.getFullYear()===fri.getFullYear())title=mon.getDate()+" "+FULL[mon.getMonth()]+" – "+fri.getDate()+" "+FULL[fri.getMonth()]+" "+fri.getFullYear();
 else title=mon.getDate()+" "+FULL[mon.getMonth()]+" "+mon.getFullYear()+" – "+fri.getDate()+" "+FULL[fri.getMonth()]+" "+fri.getFullYear();
 var tsz=title.length<22?28:19;
-var mc=SH.map(function(m,i){return '<div class="mc'+(hm[i]?' on':'')+'">'+m+'</div>';}).join("");
+var mc=SH.map(function(m,i){return '<div class="mc'+(hm[i]?' on':'')+'" role="button" tabindex="0" data-mon="'+i+'" data-y="'+Y+'" title="'+FULL[i]+' '+Y+'\'e git">'+m+'</div>';}).join("");
 var ws=[];M.forEach(function(x,j){for(var q=0;q<5;q++){var d=addDays(x.d,q);if(d.getMonth()===anc.getMonth()&&d.getFullYear()===Y){ws.push(j);break;}}});
-var wc=ws.map(function(j){return '<div class="wc'+(j===ix?' on':'')+'"><div style="font-size:13px;font-weight:700">H'+M[j].w+'</div><div style="font-size:9px">'+rng(M[j].d)+'</div></div>';}).join("");
+var wc=ws.map(function(j){return '<div class="wc'+(j===ix?' on':'')+'" role="button" tabindex="0" data-wk="'+j+'" title="'+M[j].w+'. haftaya git"><div style="font-size:13px;font-weight:700">H'+M[j].w+'</div><div style="font-size:9px">'+rng(M[j].d)+'</div></div>';}).join("");
 var days=wd.map(function(d,i){var l="",dn=S[pre+":dn"+i]||9;for(var r=1;r<=dn;r++){l+='<div class="ln"><input type="checkbox" class="cb" data-k="'+pre+':dc'+i+':'+r+'" aria-label="Tamamlandı"><input type="text" class="tx" data-k="'+pre+':d'+i+':'+r+'" aria-label="'+DAYS[i]+' not '+r+'"><button type="button" class="x" data-del="d|'+i+'|'+r+'" aria-label="Satırı sil" title="Satırı sil">×</button></div>';}
 return '<div class="day"><div class="dh"><b class="df">'+DAYS[i]+'</b><span class="dr">'+d.getDate()+' '+SH[d.getMonth()]+'<button type="button" class="dadd np" data-addday="'+i+'" title="Bu güne satır ekle" aria-label="Bu güne satır ekle"'+(dn>=14?' disabled':'')+'>+</button></span></div>'+l+'</div>';}).join("");
 var n=ncols(pre),cols="";for(var c=0;c<n;c++){var rows="";for(var r=0;r<7;r++){rows+='<div class="row"><input type="checkbox" class="cb" data-k="'+pre+':c'+c+':'+r+'" aria-label="Tamamlandı"><input type="text" class="tx" data-k="'+pre+':t'+c+':'+r+'" aria-label="Takip konusu"><button type="button" class="x" data-del="t|'+c+'|'+r+'" aria-label="Satırı sil" title="Satırı sil">×</button></div>';}cols+='<div class="col">'+rows+'</div>';}
@@ -248,7 +255,7 @@ var sh=$("sheet"),old=sh.querySelector(".cols"),sl=(keep&&old)?old.scrollLeft:0;
 sh.innerHTML=build(L[p]);restore(sh);
 var c=sh.querySelector(".cols");if(c){if(sl)c.scrollLeft=sl;c.addEventListener("scroll",updNav);updNav();}
 var e=M[L[p]];
-$("sel").value=String(p);$("prev").disabled=p<=0;$("next").disabled=p>=L.length-1;
+syncPickers(p);$("prev").disabled=p<=0;$("next").disabled=p>=L.length-1;
 document.title="Haftalık Planlayıcı – "+e.y+" / "+e.w+". Hafta";renderTabs();fit();
 }
 function autoGrow(el){el.style.height="auto";el.style.height=Math.max(28,el.scrollHeight)+"px";}
@@ -320,7 +327,7 @@ if(el.id==="cname"){var c=getList().filter(function(x){return x.id===view;})[0];
 if(!el.getAttribute("data-k"))return;
 if(el.classList&&el.classList.contains("tw")){if(el.value.indexOf("\n")>=0)el.value=el.value.replace(/\s*\n\s*/g," ");autoGrow(el);}
 S[el.getAttribute("data-k")]=el.type==="checkbox"?el.checked:el.value;save();if(view!=="week")updTabs();});
-sheet.addEventListener("keydown",function(e){if(e.key==="Enter"&&e.target.classList&&e.target.classList.contains("tw"))e.preventDefault();});
+sheet.addEventListener("keydown",function(e){if(e.key==="Enter"&&e.target.classList&&e.target.classList.contains("tw"))e.preventDefault();if((e.key==="Enter"||e.key===" ")&&e.target.hasAttribute&&(e.target.hasAttribute("data-mon")||e.target.hasAttribute("data-wk"))){e.preventDefault();e.target.click();}});
 sheet.addEventListener("change",function(e){var el=e.target;if(el.type==="checkbox"&&el.getAttribute("data-k")){S[el.getAttribute("data-k")]=el.checked;save();if(view!=="week")updTabs();}});
 sheet.addEventListener("click",function(e){
 var t=e.target;if(!t.closest)return;var b;
@@ -330,13 +337,24 @@ if(b.getAttribute("data-nav")==="-1")c.scrollBy({left:-st,behavior:"smooth"});
 else if(c.scrollLeft+c.clientWidth>=c.scrollWidth-4)addCol();
 else c.scrollBy({left:st,behavior:"smooth"});return;}
 if((b=t.closest("[data-addday]"))){var di=b.getAttribute("data-addday"),pk=dkey(M[L[cur]].d)+":dn"+di;S[pk]=Math.min(14,(S[pk]||9)+1);save();render(cur,true);return;}
+if((b=t.closest("[data-mon]"))){var gp=firstWeekOf(parseInt(b.getAttribute("data-y"),10),parseInt(b.getAttribute("data-mon"),10));if(gp>=0)render(gp);return;}
+if((b=t.closest("[data-wk]"))){var wp=L.indexOf(parseInt(b.getAttribute("data-wk"),10));if(wp>=0)render(wp);return;}
 if((b=t.closest("[data-sub]"))){var sp=b.getAttribute("data-sub").split("|");addSub(sp[0],parseInt(sp[1],10));return;}
 if((b=t.closest("[data-addrow]"))){var id=b.getAttribute("data-addrow");S["cust:"+id+":n"]=(S["cust:"+id+":n"]||14)+1;save();showCust(id);return;}
 if((b=t.closest("[data-delc]"))){delCustomer(b.getAttribute("data-delc"));}
 });
 $("tabs").addEventListener("click",function(e){var move=e.target.closest?e.target.closest("[data-move]"):null;if(move){if(move.disabled)return;var p=move.getAttribute("data-move").split("|"),id=p[0],delta=parseInt(p[1],10),list=getList(),i=list.findIndex(function(c){return c.id===id;}),j=i+delta;if(i<0||j<0||j>=list.length)return;var tmp=list[i];list[i]=list[j];list[j]=tmp;S["cust:list"]=list;save();renderTabs();return;}var b=e.target.closest?e.target.closest("[data-tab]"):null;if(!b)return;var v=b.getAttribute("data-tab");if(v==="week")render(cur);else showCust(v);});
-var sel=$("sel"),grp=null,gy=0;
-L.forEach(function(ix,p){var e=M[ix];if(e.y!==gy){gy=e.y;grp=document.createElement("optgroup");grp.label=String(gy);sel.appendChild(grp);}var o=document.createElement("option");o.value=String(p);o.textContent=e.w+". Hafta · "+rng(e.d);grp.appendChild(o);});
+var selY=$("selY"),selM=$("selM"),sel=$("sel");
+(function(){var ys=[];L.forEach(function(ix){if(ys.indexOf(M[ix].y)<0)ys.push(M[ix].y);});
+ys.forEach(function(y){var o=document.createElement("option");o.value=String(y);o.textContent=String(y);selY.appendChild(o);});
+FULL.forEach(function(n,i){var o=document.createElement("option");o.value=String(i);o.textContent=n;selM.appendChild(o);});})();
+function monthOf(e){return addDays(e.d,3).getMonth();}
+function firstWeekOf(y,m){for(var q=0;q<L.length;q++){var e=M[L[q]];if(e.y===y&&monthOf(e)===m)return q;}return -1;}
+function syncPickers(p){var e=M[L[p]],m=monthOf(e);selY.value=String(e.y);selM.value=String(m);sel.innerHTML="";
+L.forEach(function(ix,q){var x=M[ix];if(x.y===e.y&&monthOf(x)===m){var o=document.createElement("option");o.value=String(q);o.textContent=x.w+". Hafta · "+rng(x.d);sel.appendChild(o);}});
+sel.value=String(p);}
+function goYM(){var p=firstWeekOf(parseInt(selY.value,10),parseInt(selM.value,10));if(p<0){syncPickers(cur);return;}render(p);}
+selY.addEventListener("change",goYM);selM.addEventListener("change",goYM);
 sel.addEventListener("change",function(){render(parseInt(sel.value,10));});
 $("prev").addEventListener("click",function(){if(cur>0)render(cur-1);});
 $("next").addEventListener("click",function(){if(cur<L.length-1)render(cur+1);});
