@@ -80,6 +80,12 @@ input[type=date]{font:inherit;font-size:13px;color:#1d2433;border:1px solid #cfd
 .row{flex:1;display:flex;align-items:center;gap:10px;border-bottom:1px solid #e1e5ec}
 .row:last-child{border-bottom:0}
 .row input[type=text]{height:100%;padding:0 4px;font-size:14px}
+.row.mir{cursor:pointer;background:rgba(217,119,6,.07)}
+.row.mir:hover,.row.mir:focus-visible{background:rgba(217,119,6,.16);outline:none}
+.mir .mk{flex:none;width:16px;text-align:center;color:#b45309;font-size:13px;font-weight:700;line-height:1}
+.mir .mt{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:14px;color:#1d2433;padding:0 4px}
+.mir.sub .mt{font-size:13px;color:#4b5565}
+.row.blank{cursor:default}
 .cb{appearance:none;-webkit-appearance:none;flex:none;width:16px;height:16px;margin:0;border:1.5px solid #0f766e;border-radius:3px;background:#fff;cursor:pointer;display:grid;place-content:center}
 .cb:checked{background:#0f766e}
 .cb:checked::after{content:"";width:4px;height:8px;border:solid #fff;border-width:0 2px 2px 0;transform:rotate(45deg) translate(-1px,-1px)}
@@ -209,6 +215,25 @@ changed=true;
 }
 if(changed||S[pre+":v"]!==1){S[pre+":g"]=seen;S[pre+":v"]=1;save();}
 }
+function mirrorItems(){var out=[];
+getList().forEach(function(c){var b="cust:"+c.id+":",n=S[b+"n"]||14,pShown=false;
+for(var r=0;r<n;r++){var t=String(S[b+"t:"+r]||"").trim(),sub=!!S[b+"i:"+r],done=!!S[b+"c:"+r];
+if(!t){if(!sub)pShown=false;continue;}
+if(!sub){pShown=!done;if(done)continue;out.push({id:c.id,sub:false,text:c.name+": "+t});}
+else{if(done)continue;out.push({id:c.id,sub:true,text:"↳ "+(pShown?"":c.name+": ")+t});}}});
+return out;}
+function fuCols(ix,pre){
+var mir=M[ix].d>=M[L[weekOfToday()]].d?mirrorItems():[],n=ncols(pre),seq=[];
+mir.forEach(function(m){seq.push({m:m});});
+for(var c=0;c<n;c++)for(var r=0;r<7;r++)seq.push({c:c,r:r});
+var nc=Math.ceil(seq.length/7),cols="";
+for(var k=0;k<nc;k++){var rows="";
+for(var j=0;j<7;j++){var it=seq[k*7+j];
+if(!it){rows+='<div class="row blank"></div>';}
+else if(it.m){rows+='<div class="row mir'+(it.m.sub?" sub":"")+'" role="button" tabindex="0" data-gopage="'+esc(it.m.id)+'" title="'+esc(it.m.text)+' — sayfada düzenle"><span class="mk" aria-hidden="true">↗</span><span class="mt">'+esc(it.m.text)+'</span></div>';}
+else{rows+='<div class="row"><input type="checkbox" class="cb" data-k="'+pre+':c'+it.c+':'+it.r+'" aria-label="Tamamlandı"><input type="text" class="tx" data-k="'+pre+':t'+it.c+':'+it.r+'" aria-label="Takip konusu"><button type="button" class="x" data-del="t|'+it.c+'|'+it.r+'" aria-label="Satırı sil" title="Satırı sil">×</button></div>';}}
+cols+='<div class="col">'+rows+'</div>';}
+return cols;}
 function build(ix){
 var e=M[ix],mon=e.d,fri=addDays(mon,4),anc=addDays(mon,3),Y=e.y,wk=e.w,pre=dkey(mon);
 var wd=[0,1,2,3,4].map(function(i){return addDays(mon,i);});
@@ -223,7 +248,7 @@ var ws=[];M.forEach(function(x,j){for(var q=0;q<5;q++){var d=addDays(x.d,q);if(d
 var wc=ws.map(function(j){return '<div class="wc'+(j===ix?' on':'')+'" role="button" tabindex="0" data-wk="'+j+'" title="'+M[j].w+'. haftaya git"><div style="font-size:13px;font-weight:700">H'+M[j].w+'</div><div style="font-size:9px">'+rng(M[j].d)+'</div></div>';}).join("");
 var days=wd.map(function(d,i){var l="",dn=S[pre+":dn"+i]||9;for(var r=1;r<=dn;r++){l+='<div class="ln"><input type="checkbox" class="cb" data-k="'+pre+':dc'+i+':'+r+'" aria-label="Tamamlandı"><input type="text" class="tx" data-k="'+pre+':d'+i+':'+r+'" aria-label="'+DAYS[i]+' not '+r+'"><button type="button" class="x" data-del="d|'+i+'|'+r+'" aria-label="Satırı sil" title="Satırı sil">×</button></div>';}
 return '<div class="day"><div class="dh"><b class="df">'+DAYS[i]+'</b><span class="dr">'+d.getDate()+' '+SH[d.getMonth()]+'<button type="button" class="dadd np" data-addday="'+i+'" title="Bu güne satır ekle" aria-label="Bu güne satır ekle"'+(dn>=14?' disabled':'')+'>+</button></span></div>'+l+'</div>';}).join("");
-var n=ncols(pre),cols="";for(var c=0;c<n;c++){var rows="";for(var r=0;r<7;r++){rows+='<div class="row"><input type="checkbox" class="cb" data-k="'+pre+':c'+c+':'+r+'" aria-label="Tamamlandı"><input type="text" class="tx" data-k="'+pre+':t'+c+':'+r+'" aria-label="Takip konusu"><button type="button" class="x" data-del="t|'+c+'|'+r+'" aria-label="Satırı sil" title="Satırı sil">×</button></div>';}cols+='<div class="col">'+rows+'</div>';}
+var cols=fuCols(ix,pre);
 return '<div class="top"><div class="title"><div><div class="lab">HAFTALIK PLAN</div><div class="dt df" style="font-size:'+tsz+'px">'+title+'</div></div><div><div class="num df">'+wk+'</div><div class="numl">HAFTA / '+CNT[Y]+'</div></div></div>'
 +'<div class="panel" style="flex:1"><div class="pl">AY — '+Y+'</div><div class="g" style="grid-template-columns:repeat(12,1fr)">'+mc+'</div></div>'
 +'<div class="panel" style="width:300px"><div class="pl">'+FULL[anc.getMonth()].toLocaleUpperCase("tr")+' HAFTALARI</div><div class="g" style="grid-template-columns:repeat('+ws.length+',1fr)">'+wc+'</div></div></div>'
@@ -327,7 +352,7 @@ if(el.id==="cname"){var c=getList().filter(function(x){return x.id===view;})[0];
 if(!el.getAttribute("data-k"))return;
 if(el.classList&&el.classList.contains("tw")){if(el.value.indexOf("\n")>=0)el.value=el.value.replace(/\s*\n\s*/g," ");autoGrow(el);}
 S[el.getAttribute("data-k")]=el.type==="checkbox"?el.checked:el.value;save();if(view!=="week")updTabs();});
-sheet.addEventListener("keydown",function(e){if(e.key==="Enter"&&e.target.classList&&e.target.classList.contains("tw"))e.preventDefault();if((e.key==="Enter"||e.key===" ")&&e.target.hasAttribute&&(e.target.hasAttribute("data-mon")||e.target.hasAttribute("data-wk"))){e.preventDefault();e.target.click();}});
+sheet.addEventListener("keydown",function(e){if(e.key==="Enter"&&e.target.classList&&e.target.classList.contains("tw"))e.preventDefault();if((e.key==="Enter"||e.key===" ")&&e.target.hasAttribute&&(e.target.hasAttribute("data-mon")||e.target.hasAttribute("data-wk")||e.target.hasAttribute("data-gopage"))){e.preventDefault();e.target.click();}});
 sheet.addEventListener("change",function(e){var el=e.target;if(el.type==="checkbox"&&el.getAttribute("data-k")){S[el.getAttribute("data-k")]=el.checked;save();if(view!=="week")updTabs();}});
 sheet.addEventListener("click",function(e){
 var t=e.target;if(!t.closest)return;var b;
@@ -337,6 +362,7 @@ if(b.getAttribute("data-nav")==="-1")c.scrollBy({left:-st,behavior:"smooth"});
 else if(c.scrollLeft+c.clientWidth>=c.scrollWidth-4)addCol();
 else c.scrollBy({left:st,behavior:"smooth"});return;}
 if((b=t.closest("[data-addday]"))){var di=b.getAttribute("data-addday"),pk=dkey(M[L[cur]].d)+":dn"+di;S[pk]=Math.min(14,(S[pk]||9)+1);save();render(cur,true);return;}
+if((b=t.closest("[data-gopage]"))){showCust(b.getAttribute("data-gopage"));return;}
 if((b=t.closest("[data-mon]"))){var gp=firstWeekOf(parseInt(b.getAttribute("data-y"),10),parseInt(b.getAttribute("data-mon"),10));if(gp>=0)render(gp);return;}
 if((b=t.closest("[data-wk]"))){var wp=L.indexOf(parseInt(b.getAttribute("data-wk"),10));if(wp>=0)render(wp);return;}
 if((b=t.closest("[data-sub]"))){var sp=b.getAttribute("data-sub").split("|");addSub(sp[0],parseInt(sp[1],10));return;}
