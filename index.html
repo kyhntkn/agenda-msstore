@@ -18,6 +18,13 @@ body{margin:0;background:var(--bg);font-family:'IBM Plex Sans','Segoe UI',sans-s
 #bar button:disabled{opacity:.45;cursor:default}
 #bar button.pri{background:var(--acc);border-color:var(--acc);color:#fff;font-weight:700}
 #bar .hint{font-size:12px;opacity:.7}
+#hb{font-size:20px;line-height:1;padding:8px 14px;min-width:48px}
+#menu[hidden]{display:none}
+#menu{position:absolute;top:100%;left:16px;margin-top:6px;z-index:8;display:flex;flex-direction:column;gap:6px;min-width:220px;padding:8px;background:var(--bar);border:1px solid var(--bar-line);border-radius:10px;box-shadow:0 8px 28px rgba(0,0,0,.22)}
+#menu button{width:100%;text-align:left}
+#menu .zm{display:flex;gap:6px}
+#menu .zm button{flex:1;text-align:center;min-width:0;padding:8px 6px}
+#menu .zm #zl{flex:2}
 #wrap{display:flex;justify-content:safe center;align-items:flex-start;margin:16px auto;padding:0 12px;box-sizing:border-box}
 #stage{overflow:hidden;flex:none}
 #tabs{flex:none;width:118px;display:flex;flex-direction:column;gap:6px;padding-top:24px}
@@ -33,7 +40,7 @@ body{margin:0;background:var(--bg);font-family:'IBM Plex Sans','Segoe UI',sans-s
 .tab.pend{background:#f5c26b;color:#4a2800}
 .tab.pend.on{background:#d97706;color:#fff}
 .tab.on{background:var(--acc);color:#fff;font-weight:700}
-#sheet.wide{width:1440px}
+#sheet.wide{width:1600px}
 #sheet{width:1123px;height:794px;box-sizing:border-box;padding:32px;display:flex;flex-direction:column;gap:14px;background:#fff;color:#1d2433;transform-origin:top left;box-shadow:0 4px 24px rgba(0,0,0,.18)}
 .df{font-family:'Bricolage Grotesque','Segoe UI',sans-serif}
 .top{display:flex;gap:14px;align-items:stretch}
@@ -127,24 +134,27 @@ html,body{background:#fff}
 #wrap{display:block;margin:0;padding:0}
 #stage{height:auto!important;width:auto!important;overflow:visible}
 #sheet{transform:none!important;box-shadow:none}
-#sheet.wide{zoom:.77986}
+#sheet.wide{zoom:.70188}
 }
 </style>
 </head>
 <body>
 <div id="bar">
-<button id="prev" type="button">‹ Önceki hafta</button>
-<select id="selY" aria-label="Yıl seç"></select>
-<select id="selM" aria-label="Ay seç"></select>
-<select id="sel" aria-label="Hafta seç"></select>
-<button id="next" type="button">Sonraki hafta ›</button>
-<button id="today" type="button">Bu hafta</button>
+<button id="hb" type="button" aria-label="Menü" aria-haspopup="true" aria-expanded="false" aria-controls="menu" title="Menü">☰</button>
+<div id="menu" role="menu" hidden>
 <span class="zm"><button id="zo" type="button" title="Küçült (Ctrl −)">−</button><button id="zl" type="button" title="Pencereye sığdır (Ctrl 0)">Sığdır</button><button id="zi" type="button" title="Büyüt (Ctrl +)">+</button></span>
 <button id="print" type="button" class="pri">Yazdır</button>
 <button id="op" type="button" title="Daha önce aldığın bir yedek dosyasını (.json) içeri aktarır">Aç</button>
 <button id="sv" type="button" title="Notları yerel veritabanına kaydeder (zaten otomatik kaydedilir)">Kaydet</button>
 <button id="sa" type="button" title="Verilerin bir yedek kopyasını .json dosyası olarak kaydeder">Farklı Kaydet</button>
 <button id="ac" type="button">Sayfa Ekle</button>
+</div>
+<button id="prev" type="button">‹ Önceki hafta</button>
+<select id="selY" aria-label="Yıl seç"></select>
+<select id="selM" aria-label="Ay seç"></select>
+<select id="sel" aria-label="Hafta seç"></select>
+<button id="next" type="button">Sonraki hafta ›</button>
+<button id="today" type="button">Bu hafta</button>
 <input id="rf" type="file" accept=".json,application/json" hidden>
 <span id="st" class="hint"></span>
 </div>
@@ -279,7 +289,7 @@ $("tabs").innerHTML=h;
 function updNav(){var c=document.querySelector("#sheet .cols"),b=document.querySelector('#sheet [data-nav="-1"]');if(c&&b)b.disabled=c.scrollLeft<=1;}
 function render(p,keep){
 cur=p;view="week";ensureCarry(p);
-var sh=$("sheet");sh.classList.add("wide");SHW=1440;var old=sh.querySelector(".cols"),sl=(keep&&old)?old.scrollLeft:0;
+var sh=$("sheet");sh.classList.add("wide");SHW=1600;var old=sh.querySelector(".cols"),sl=(keep&&old)?old.scrollLeft:0;
 sh.innerHTML=build(L[p]);restore(sh);
 var c=sh.querySelector(".cols");if(c){if(sl)c.scrollLeft=sl;c.addEventListener("scroll",updNav);updNav();}
 var e=M[L[p]];
@@ -385,6 +395,13 @@ sel.value=String(p);}
 function goYM(){var p=firstWeekOf(parseInt(selY.value,10),parseInt(selM.value,10));if(p<0){syncPickers(cur);return;}render(p);}
 selY.addEventListener("change",goYM);selM.addEventListener("change",goYM);
 sel.addEventListener("change",function(){render(parseInt(sel.value,10));});
+(function(){var hb=$("hb"),menu=$("menu");
+function setMenu(o){menu.hidden=!o;hb.setAttribute("aria-expanded",o?"true":"false");}
+hb.addEventListener("click",function(e){e.stopPropagation();setMenu(menu.hidden);});
+menu.addEventListener("click",function(e){var b=e.target.closest("button");if(b&&b.id!=="zo"&&b.id!=="zl"&&b.id!=="zi")setTimeout(function(){setMenu(false);},0);});
+document.addEventListener("click",function(e){if(!menu.hidden&&!menu.contains(e.target))setMenu(false);});
+document.addEventListener("keydown",function(e){if(e.key==="Escape"&&!menu.hidden){setMenu(false);hb.focus();}});
+})();
 $("prev").addEventListener("click",function(){if(cur>0)render(cur-1);});
 $("next").addEventListener("click",function(){if(cur<L.length-1)render(cur+1);});
 $("today").addEventListener("click",function(){render(weekOfToday());});
