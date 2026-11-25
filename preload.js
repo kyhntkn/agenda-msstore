@@ -7,5 +7,9 @@ contextBridge.exposeInMainWorld("agendaAPI", {
   writeSync: (text) => ipcRenderer.sendSync("agenda:writeSync", text),
   open: () => ipcRenderer.invoke("agenda:open"),
   use: (p) => ipcRenderer.invoke("agenda:use", p),
-  saveAs: (text) => ipcRenderer.invoke("agenda:saveAs", text)
+  saveAs: (text) => ipcRenderer.invoke("agenda:saveAs", text),
+  notify: (o) => ipcRenderer.invoke("agenda:notify", o),
+  settings: () => ipcRenderer.invoke("agenda:settings"),
+  setSetting: (k, v) => ipcRenderer.invoke("agenda:setSetting", k, v),
+  onGoto: (cb) => ipcRenderer.on("agenda:goto", (e, t) => { try { cb(t); } catch (err) { /* yoksay */ } })
 });

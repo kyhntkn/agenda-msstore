@@ -8,6 +8,17 @@ npm install
 npm start
 ```
 
+## Özellikler (1.8)
+
+- **Aylık Plan** sekmesi: ayın takvimi, her günde o günün notları (öncelik rengi, 🔔 saat). Bir güne tıklayınca o hafta açılır; sayfalarda tarihi o güne denk gelen satırlar da görünür.
+- **Hatırlatma**: gün notunun üzerine gelip 🔔 ile saat seç; sayfalarda tarih + saat alanı. Saati gelince Windows bildirimi çıkar, bildirime tıklayınca ilgili not açılır. Uygulama kapalıyken gelen hatırlatmalar açılışta "kaçırıldı" olarak bildirilir.
+- **Sistem tepsisi ve Windows ile başlat**: pencere kapatılınca uygulama tepside çalışmaya devam eder (Menü → "Kapatınca tepside çalış"). Kurulum sürümünde "Windows ile başlat" ilk açılışta açıktır, menüden kapatılabilir. Store sürümünde başlangıç ayarı Windows Ayarları → Uygulamalar → Başlangıç'tan yönetilir.
+- **Arama** (🔍 Ara / Ctrl F): tüm haftalarda, takip konularında ve sayfalarda arar.
+- **Tekrarlayan Görevler** (Menü): her gün / hafta içi / her hafta / her ay; isteğe bağlı hatırlatma saatiyle.
+- **Öncelik**: satırdaki noktaya tıkla → yüksek (kırmızı) / orta (sarı) / düşük (yeşil).
+- **Haftalık / aylık özet**: tamamlanan görev sayısı ve ilerleme çubuğu.
+- **Tema** (Menü): Otomatik / Açık / Koyu. Yazdırırken her zaman açık tema kullanılır.
+
 ## Veri depolama
 
 Plan verisi yerel bir **SQLite** veritabanında tutulur: `Belgeler\Haftalik-Plan\Haftalik-Plan.db`

@@ -1,6 +1,6 @@
 {
   "name": "haftalik-plan",
-  "version": "1.7.0",
+  "version": "1.8.0",
   "description": "Haftalik Plan masaustu uygulamasi",
   "main": "main.js",
   "author": "Haftalik Plan",
@@ -45,7 +45,8 @@
         "tr-TR"
       ],
       "backgroundColor": "#0f766e",
-      "showNameOnTiles": true
+      "showNameOnTiles": true,
+      "addAutoLaunchExtension": true
     },
     "copyright": "Copyright © 2026 Haftalik Plan"
   },
