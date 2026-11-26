@@ -207,6 +207,19 @@ input[type=time]{font:inherit;font-size:13px;color:#1d2433;border:1px solid #cfd
 :root[data-theme="dark"] .mdl .mb button:not(.pri){background:#1a212c;color:var(--s-ink);border-color:var(--s-line)}
 :root[data-theme="dark"] .rli{border-color:var(--s-line)}
 :root[data-theme="dark"] .rli .rk,:root[data-theme="dark"] .sr small{color:var(--s-acc2)}
+/* bugünün sütunu */
+#sheet .day.today{border:2px solid #0f766e;box-shadow:0 0 0 3px rgba(15,118,110,.18)}
+#sheet .day.today .dh{background:#0f766e;color:#fff;border-bottom-color:#0f766e}
+#sheet .day.today .dh b{text-decoration:underline;text-underline-offset:3px;text-decoration-thickness:2px}
+#sheet .day.today .dh span{color:#fff}
+#sheet .day.today .dadd{background:transparent;border-color:#fff;color:#fff}
+#sheet .day.today .dadd:hover,#sheet .day.today .dadd:focus-visible{background:#fff;color:#0f766e}
+:root[data-theme="dark"] #sheet .day.today{border-color:#2dd4bf;box-shadow:0 0 0 3px rgba(45,212,191,.18)}
+/* takip satırlarında öncelik + hatırlatma */
+.col .row .pr:not(.p1):not(.p2):not(.p3),.col .row .bl:not(.set){display:none}
+.col .row:hover .pr:not(.p1):not(.p2):not(.p3),.col .row:focus-within .pr:not(.p1):not(.p2):not(.p3){display:grid}
+.col .row:hover .bl:not(.set),.col .row:focus-within .bl:not(.set){display:inline-block}
+.mn.tk{color:var(--s-acc2)}.mn.tk:hover{background:rgba(15,118,110,.14)}
 @media print{
 @page{size:A4 landscape;margin:0}
 html,body{background:#fff}
@@ -275,7 +288,7 @@ function ncols(pre){return S[pre+":ncols"]||3;}
 function weekOfToday(){var t=new Date();t=new Date(t.getFullYear(),t.getMonth(),t.getDate());var p=0;for(var q=0;q<L.length;q++){if(t>=M[L[q]].d)p=q;}return p;}
 function weekHasData(ix){var pre=dkey(M[ix].d);if(S[pre+":v"])return true;var n=ncols(pre);for(var c=0;c<n;c++)for(var r=0;r<7;r++){if(String(S[pre+":t"+c+":"+r]||"").trim())return true;}return false;}
 function doneIn(sp,t){var n=ncols(sp),done=false,found=false;for(var c=0;c<n;c++)for(var r=0;r<7;r++){if(String(S[sp+":t"+c+":"+r]||"")===t){found=true;if(S[sp+":c"+c+":"+r])done=true;else return false;}}if(!found)return Array.isArray(S[sp+":h"])&&S[sp+":h"].indexOf(t)>=0;return done;}
-function shiftUpWeek(pre,c,r){var ks=["t","c","o"];
+function shiftUpWeek(pre,c,r){var ks=["t","c","o","p","r"];
 for(var q=r;q<6;q++)ks.forEach(function(k){var a=pre+":"+k+c+":"+(q+1),b=pre+":"+k+c+":"+q,v=S[a];if(v)S[b]=v;else delete S[b];});
 ks.forEach(function(k){delete S[pre+":"+k+c+":6"];});}
 function reconcileCarry(upto){var ch=false;
@@ -294,8 +307,8 @@ reconcileCarry(p);
 var pre=dkey(M[L[p]].d),old=S[pre+":g"],first=!Array.isArray(old),seen=first?[]:old.slice(),changed=first;
 var src=-1;for(var q=p-1;q>=0;q--){if(weekHasData(L[q])){src=q;break;}}
 if(src>=0){
-var sp=dkey(M[L[src]].d),sn=ncols(sp),items=[];
-for(var c=0;c<sn;c++)for(var r=0;r<7;r++){var t=String(S[sp+":t"+c+":"+r]||"");if(t.trim()&&!S[sp+":c"+c+":"+r]&&items.indexOf(t)<0)items.push(t);}
+var sp=dkey(M[L[src]].d),sn=ncols(sp),items=[],meta={};
+for(var c=0;c<sn;c++)for(var r=0;r<7;r++){var t=String(S[sp+":t"+c+":"+r]||"");if(t.trim()&&!S[sp+":c"+c+":"+r]&&items.indexOf(t)<0){items.push(t);meta[t]={p:S[sp+":p"+c+":"+r],r:S[sp+":r"+c+":"+r]};}}
 var have=weekTexts(pre);
 if(first&&S[pre+":v"]===1){
 items.forEach(function(t){if(seen.indexOf(t)<0)seen.push(t);});
@@ -307,7 +320,8 @@ if(add.length){
 var nc=ncols(pre),slots=[];
 for(var c2=0;c2<nc;c2++)for(var r2=0;r2<7;r2++){if(!String(S[pre+":t"+c2+":"+r2]||"").trim())slots.push([c2,r2]);}
 while(slots.length<add.length){for(var r3=0;r3<7;r3++)slots.push([nc,r3]);nc++;}
-add.forEach(function(t,i){S[pre+":t"+slots[i][0]+":"+slots[i][1]]=t;delete S[pre+":c"+slots[i][0]+":"+slots[i][1]];S[pre+":o"+slots[i][0]+":"+slots[i][1]]=sp;});
+add.forEach(function(t,i){var sk=slots[i][0]+":"+slots[i][1],mt=meta[t]||{};S[pre+":t"+sk]=t;delete S[pre+":c"+sk];S[pre+":o"+sk]=sp;
+if(mt.p)S[pre+":p"+sk]=mt.p;else delete S[pre+":p"+sk];if(mt.r)S[pre+":r"+sk]=mt.r;else delete S[pre+":r"+sk];});
 if(nc>3)S[pre+":ncols"]=nc;
 changed=true;
 }
@@ -331,7 +345,7 @@ for(var k=0;k<nc;k++){var rows="";
 for(var j=0;j<7;j++){var it=seq[k*7+j];
 if(!it){rows+='<div class="row blank"></div>';}
 else if(it.m){rows+='<div class="row mir'+(it.m.sub?" sub":"")+'" role="button" tabindex="0" data-gopage="'+esc(it.m.id)+'" title="'+esc(it.m.text)+' — sayfada düzenle"><span class="mk" aria-hidden="true">↗</span><span class="mt">'+esc(it.m.text)+'</span></div>';}
-else{rows+='<div class="row"><input type="checkbox" class="cb" data-k="'+pre+':c'+it.c+':'+it.r+'" aria-label="Tamamlandı"><input type="text" class="tx" data-k="'+pre+':t'+it.c+':'+it.r+'" aria-label="Takip konusu"><button type="button" class="x" data-del="t|'+it.c+'|'+it.r+'" aria-label="Satırı sil" title="Satırı sil">×</button></div>';}}
+else{var pk=pre+':p'+it.c+':'+it.r,rk=pre+':r'+it.c+':'+it.r,pv=S[pk]||0,rv=S[rk]||"";rows+='<div class="row'+(pv?' p'+pv:'')+'"><input type="checkbox" class="cb" data-k="'+pre+':c'+it.c+':'+it.r+'" aria-label="Tamamlandı"><input type="text" class="tx" data-k="'+pre+':t'+it.c+':'+it.r+'" aria-label="Takip konusu"><button type="button" class="pr np'+(pv?' p'+pv:'')+'" data-prio="'+pk+'" title="Öncelik: '+PRN[pv]+' (tıklayınca değişir)" aria-label="Öncelik"></button><button type="button" class="bl np'+(rv?' set':'')+'" data-bell="'+rk+'" title="'+(rv?'Hatırlatma: '+esc(fmtRem(rv))+' (değiştir)':'Hatırlatma ekle')+'" aria-label="Hatırlatma">🔔'+(rv?esc(fmtRem(rv)):'')+'</button><button type="button" class="x" data-del="t|'+it.c+'|'+it.r+'" aria-label="Satırı sil" title="Satırı sil">×</button></div>';}}
 cols+='<div class="col">'+rows+'</div>';}
 return cols;}
 function build(ix){
@@ -347,7 +361,7 @@ var mc=SH.map(function(m,i){return '<div class="mc'+(hm[i]?' on':'')+'" role="bu
 var ws=[];M.forEach(function(x,j){for(var q=0;q<7;q++){var d=addDays(x.d,q);if(d.getMonth()===anc.getMonth()&&d.getFullYear()===Y){ws.push(j);break;}}});
 var wc=ws.map(function(j){return '<div class="wc'+(j===ix?' on':'')+'" role="button" tabindex="0" data-wk="'+j+'" title="'+M[j].w+'. haftaya git"><div style="font-size:13px;font-weight:700">H'+M[j].w+'</div><div style="font-size:9px">'+rng(M[j].d)+'</div></div>';}).join("");
 var days=wd.map(function(d,i){var l="",dn=S[pre+":dn"+i]||9;for(var r=1;r<=dn;r++){var pv=S[pre+':dp'+i+':'+r]||0,tm=S[pre+':dr'+i+':'+r]||"";l+='<div class="ln'+(pv?' p'+pv:'')+'"><input type="checkbox" class="cb" data-k="'+pre+':dc'+i+':'+r+'" aria-label="Tamamlandı"><input type="text" class="tx" data-k="'+pre+':d'+i+':'+r+'" aria-label="'+DAYS[i]+' not '+r+'"><button type="button" class="pr np'+(pv?' p'+pv:'')+'" data-prio="'+pre+':dp'+i+':'+r+'" title="Öncelik: '+PRN[pv]+' (tıklayınca değişir)" aria-label="Öncelik"></button><button type="button" class="bl np'+(tm?' set':'')+'" data-bell="'+pre+':dr'+i+':'+r+'" title="'+(tm?'Hatırlatma: '+tm+' (değiştir)':'Hatırlatma ekle')+'" aria-label="Hatırlatma">🔔'+(tm?esc(tm):'')+'</button><button type="button" class="x" data-del="d|'+i+'|'+r+'" aria-label="Satırı sil" title="Satırı sil">×</button></div>';}
-return '<div class="day"><div class="dh"><b class="df">'+DAYS[i]+'</b><span class="dr">'+d.getDate()+' '+SH[d.getMonth()]+'<button type="button" class="dadd np" data-addday="'+i+'" title="Bu güne satır ekle" aria-label="Bu güne satır ekle"'+(dn>=14?' disabled':'')+'>+</button></span></div>'+l+'</div>';}).join("");
+return '<div class="day'+(dkey(d)===dkey(new Date())?' today':'')+'"><div class="dh"><b class="df">'+DAYS[i]+'</b><span class="dr">'+d.getDate()+' '+SH[d.getMonth()]+'<button type="button" class="dadd np" data-addday="'+i+'" title="Bu güne satır ekle" aria-label="Bu güne satır ekle"'+(dn>=14?' disabled':'')+'>+</button></span></div>'+l+'</div>';}).join("");
 var cols=fuCols(ix,pre);
 return '<div class="top"><div class="title"><div><div class="lab">HAFTALIK PLAN</div><div class="dt df" style="font-size:'+tsz+'px">'+title+'</div></div><div><div class="num df">'+wk+'</div><div class="numl">HAFTA / '+CNT[Y]+'</div></div></div>'
 +'<div class="panel" style="flex:1"><div class="pl">AY — '+Y+'</div><div class="g" style="grid-template-columns:repeat(12,1fr)">'+mc+'</div></div>'
@@ -438,7 +452,7 @@ var K,last;
 if(kind==="u"){var b="cust:"+g+":";K=function(q){return [b+"t:"+q,b+"c:"+q,b+"a:"+q,b+"b:"+q,b+"i:"+q,b+"h:"+q,b+"p:"+q];};last=(S[b+"n"]||14)-1;}
 else{var pre=dkey(M[L[cur]].d);
 if(kind==="d"){K=function(q){return [pre+":d"+g+":"+q,pre+":dc"+g+":"+q,pre+":dr"+g+":"+q,pre+":dp"+g+":"+q];};last=S[pre+":dn"+g]||9;}
-else{K=function(q){return [pre+":t"+g+":"+q,pre+":c"+g+":"+q,pre+":o"+g+":"+q];};last=6;}}
+else{K=function(q){return [pre+":t"+g+":"+q,pre+":c"+g+":"+q,pre+":o"+g+":"+q,pre+":p"+g+":"+q,pre+":r"+g+":"+q];};last=6;}}
 var t=S[K(r)[0]]||"",cnt=1;
 if(kind==="u"&&!S[b+"i:"+r]){while(r+cnt<=last&&S[b+"i:"+(r+cnt)])cnt++;}
 if(!(await askConfirm((t?'"'+t+'" satırı':"Bu satır")+(cnt>1?" ve alt maddeleri":"")+" silinecek ve altındaki satırlar yukarı kayacak. Devam edilsin mi?","Sil")))return;
@@ -468,6 +482,7 @@ if((b=t.closest("[data-gopage]"))){var gk=b.getAttribute("data-gokey");showCust(
 if((b=t.closest("[data-prio]"))){var pk2=b.getAttribute("data-prio");S[pk2]=((S[pk2]||0)+1)%4;if(!S[pk2])delete S[pk2];save();refresh();var nb=sheet.querySelector('[data-prio="'+pk2+'"]');if(nb)nb.focus();return;}
 if((b=t.closest("[data-bell]"))){editReminder(b.getAttribute("data-bell"));return;}
 if((b=t.closest("[data-mnav]"))){var mv=b.getAttribute("data-mnav");if(mv==="0"){var tn=new Date();renderMonth(tn.getFullYear(),tn.getMonth());}else stepMonth(parseInt(mv,10));return;}
+if((b=t.closest("[data-gotk]"))){var gt=b.getAttribute("data-gotk").split("|");goTarget({kind:"week",p:parseInt(gt[0],10),k:gt[1]});return;}
 if((b=t.closest("[data-goday]"))){goDay(b.getAttribute("data-goday"));return;}
 if((b=t.closest("[data-mon]"))){var gp=firstWeekOf(parseInt(b.getAttribute("data-y"),10),parseInt(b.getAttribute("data-mon"),10));if(gp>=0)render(gp);return;}
 if((b=t.closest("[data-wk]"))){var wp=L.indexOf(parseInt(b.getAttribute("data-wk"),10));if(wp>=0)render(wp);return;}
@@ -710,12 +725,13 @@ $("rec").addEventListener("click",openRec);
 // ===== Aylık görünüm =====
 var MV={y:2026,m:0};
 function stepMonth(d){var y=MV.y,m=MV.m+d;while(m<0){m+=12;y--;}while(m>11){m-=12;y++;}if(y<2026||y>2030)return;renderMonth(y,m);}
-function dayItems(d){var out=[],ix=weekIxOf(d),ds=dkey(d);
+function dayItems(d,tr){var out=[],ix=weekIxOf(d),ds=dkey(d);
 if(ix>=0){var pre=dkey(M[ix].d),i=wdi(d),dn=S[pre+":dn"+i]||9;
 for(var r=1;r<=dn;r++){var t=String(S[pre+":d"+i+":"+r]||"").trim();if(!t)continue;out.push({t:t,done:!!S[pre+":dc"+i+":"+r],tm:S[pre+":dr"+i+":"+r]||"",pr:S[pre+":dp"+i+":"+r]||0});}}
 getList().forEach(function(c){var b="cust:"+c.id+":",n=S[b+"n"]||14;
 for(var r=0;r<n;r++){if(S[b+"a:"+r]!==ds)continue;var t=String(S[b+"t:"+r]||"").trim();if(!t)continue;
 out.push({t:c.name+": "+t,done:!!S[b+"c:"+r],tm:S[b+"h:"+r]||"",pr:S[b+"p:"+r]||0,pg:c.id,k:b+"t:"+r});}});
+(tr||[]).forEach(function(x){out.push({t:"Takip: "+x.t,done:x.done,tm:x.tm,pr:x.pr,tk:x.go});});
 out.forEach(function(x,i){x.o=i;});
 out.sort(function(a,b){return (a.done-b.done)||(a.tm&&b.tm?(a.tm<b.tm?-1:a.tm>b.tm?1:0):0)||(a.o-b.o);});
 return out;}
@@ -724,12 +740,13 @@ if(y<2026){y=2026;m=0;}if(y>2030){y=2030;m=11;}
 MV={y:y,m:m};view="month";setNavMode("month");
 var f=new Date(y,m,1),st=addDays(f,-wdi(f)),rows=Math.ceil((wdi(f)+dim(y,m))/7),w,k;
 for(w=0;w<rows;w++)ensureRec(weekIxOf(addDays(st,7*w)));
-var today=dkey(new Date()),lim=rows>5?4:5,cells="",sd=0,stt=0;
+var today=dkey(new Date()),lim=rows>5?4:5,cells="",sd=0,stt=0,TRM={};
+takipRems().forEach(function(x){(TRM[x.ds]=TRM[x.ds]||[]).push(x);});
 DAYS.forEach(function(n){cells+='<div class="mdn">'+n.toLocaleUpperCase("tr")+'</div>';});
-for(k=0;k<rows*7;k++){var d=addDays(st,k),out=d.getMonth()!==m,it=dayItems(d),ds=dkey(d),wi=weekIxOf(d);
+for(k=0;k<rows*7;k++){var d=addDays(st,k),out=d.getMonth()!==m,ds=dkey(d),it=dayItems(d,TRM[ds]),wi=weekIxOf(d);
 if(!out)it.forEach(function(x){stt++;if(x.done)sd++;});
 var shw=it.length>lim?it.slice(0,lim-1):it,ns="";
-shw.forEach(function(x){ns+='<div class="mn'+(x.done?' done':'')+(x.pr?' p'+x.pr:'')+(x.pg?' pg':'')+'"'+(x.pg?' data-gopage="'+esc(x.pg)+'" data-gokey="'+esc(x.k)+'"':'')+' title="'+esc((x.tm?x.tm+' · ':'')+x.t)+'">'+(x.tm?'<span class="tm">🔔'+esc(x.tm)+'</span>':'')+esc(x.t)+'</div>';});
+shw.forEach(function(x){ns+='<div class="mn'+(x.done?' done':'')+(x.pr?' p'+x.pr:'')+(x.pg?' pg':'')+(x.tk?' tk':'')+'"'+(x.pg?' data-gopage="'+esc(x.pg)+'" data-gokey="'+esc(x.k)+'"':'')+(x.tk?' data-gotk="'+x.tk.p+'|'+esc(x.tk.k)+'"':'')+' title="'+esc((x.tm?x.tm+' · ':'')+x.t)+'">'+(x.tm?'<span class="tm">🔔'+esc(x.tm)+'</span>':'')+esc(x.t)+'</div>';});
 if(it.length>shw.length)ns+='<div class="mmore">+'+(it.length-shw.length)+' daha</div>';
 var wk=(wdi(d)===0&&wi>=0)?'H'+M[wi].w:'';
 cells+='<div class="mcell'+(out?' out':'')+(ds===today?' today':'')+'" role="button" tabindex="0" data-goday="'+ds+'" title="'+d.getDate()+' '+FULL[d.getMonth()]+' '+d.getFullYear()+' '+DAYS[wdi(d)]+' — haftaya git"><div class="mdh"><b>'+d.getDate()+(out?' '+SH[d.getMonth()]:'')+'</b><span>'+wk+'</span></div><div class="mnotes">'+ns+'</div></div>';}
@@ -744,16 +761,30 @@ function goDay(ds){var d=pkey(ds),p=L.indexOf(weekIxOf(d));if(p<0)return;render(
 
 // ===== Hatırlatma =====
 function askNotifPerm(){if(!NATIVE&&window.Notification&&Notification.permission==="default"){try{Notification.requestPermission();}catch(e){}}}
-function askTime(title,def){return new Promise(function(res){var o=document.createElement("div");o.className="mdl";
-o.innerHTML='<div class="box"><div class="mt"></div><input type="time" class="mi" aria-label="Saat"><div class="note">'+(NATIVE?'Bu saatte Windows bildirimi gelir. Bildirimler uygulama açıkken ya da sistem tepsisinde çalışırken gelir.':'Bu saatte tarayıcı bildirimi gelir (sayfa açık olmalı).')+'</div><div class="mb">'+(def?'<button type="button" data-r="1">Kaldır</button>':'')+'<button type="button" data-c="1">İptal</button><button type="button" data-o="1" class="pri">Tamam</button></div></div>';
-o.querySelector(".mt").textContent=title;var inp=o.querySelector("input");inp.value=def||"09:00";
+function fmtRem(v){var m=/^(\d{4})-(\d\d)-(\d\d) (\d\d:\d\d)$/.exec(String(v||""));return m?m[3]+"."+m[2]+" "+m[4]:String(v||"");}
+function askTime(title,def,dateDef){return new Promise(function(res){var o=document.createElement("div");o.className="mdl";var wd=dateDef!==undefined;
+o.innerHTML='<div class="box"><div class="mt"></div>'+(wd?'<input type="date" class="mi" aria-label="Tarih" style="margin-bottom:8px">':'')+'<input type="time" class="mi" aria-label="Saat"><div class="note">'+(NATIVE?'Bu saatte Windows bildirimi gelir. Bildirimler uygulama açıkken ya da sistem tepsisinde çalışırken gelir.':'Bu saatte tarayıcı bildirimi gelir (sayfa açık olmalı).')+'</div><div class="mb">'+(def?'<button type="button" data-r="1">Kaldır</button>':'')+'<button type="button" data-c="1">İptal</button><button type="button" data-o="1" class="pri">Tamam</button></div></div>';
+o.querySelector(".mt").textContent=title;var inp=o.querySelector('input[type=time]'),di=o.querySelector('input[type=date]');inp.value=def||"09:00";if(di)di.value=dateDef||dkey(new Date());
+function val(){if(!inp.value)return "";if(di){if(!di.value)return null;return di.value+" "+inp.value;}return inp.value;}
 function done(v){document.removeEventListener("keydown",kd,true);o.remove();res(v);}
-function kd(e){if(e.key==="Escape"){e.preventDefault();done(null);}else if(e.key==="Enter"){e.preventDefault();done(inp.value||"");}}
-o.addEventListener("click",function(e){var t=e.target;if(t===o||t.hasAttribute("data-c"))done(null);else if(t.hasAttribute("data-r"))done("");else if(t.hasAttribute("data-o"))done(inp.value||"");});
-document.addEventListener("keydown",kd,true);document.body.appendChild(o);inp.focus();});}
-async function editReminder(k){var t=String(S[k.replace(/:dr(\d):/,":d$1:")]||"").trim();
-var v=await askTime(t?'"'+t+'" için hatırlatma saati':"Hatırlatma saati",S[k]||"");if(v===null)return;
+function ok(){var v=val();if(v===null){(di||inp).focus();return;}done(v);}
+function kd(e){if(e.key==="Escape"){e.preventDefault();done(null);}else if(e.key==="Enter"){e.preventDefault();ok();}}
+o.addEventListener("click",function(e){var t=e.target;if(t===o||t.hasAttribute("data-c"))done(null);else if(t.hasAttribute("data-r"))done("");else if(t.hasAttribute("data-o"))ok();});
+document.addEventListener("keydown",kd,true);document.body.appendChild(o);(di||inp).focus();});}
+async function editReminder(k){var tk=/:r\d+:\d+$/.test(k),t=String(S[tk?k.replace(/:r(\d+):/,":t$1:"):k.replace(/:dr(\d):/,":d$1:")]||"").trim(),v;
+var ttl=t?'"'+t+'" için hatırlatma':"Hatırlatma";
+if(tk){var cv=String(S[k]||""),sp=cv.split(" ");v=await askTime(ttl+" tarihi ve saati",sp[1]||"",cv?sp[0]:dkey(new Date()));}
+else v=await askTime(ttl+" saati",S[k]||"");
+if(v===null)return;
 if(v)S[k]=v;else delete S[k];save();if(v)askNotifPerm();refresh();var nb=sheet.querySelector('[data-bell="'+k+'"]');if(nb)nb.focus();}
+// Takip konularındaki hatırlatmalar (aynı konu sonraki haftalara taşındığında tek hatırlatma sayılır)
+function takipRems(){var g={};Object.keys(S).forEach(function(k){var mm=/^(\d{4}-\d\d-\d\d):r(\d+):(\d+)$/.exec(k);if(!mm)return;
+var v=String(S[k]||""),m2=/^(\d{4}-\d\d-\d\d) (\d\d:\d\d)$/.exec(v);if(!m2)return;var pre=mm[1],ix=PRE[pre];if(ix===undefined||+mm[2]>=ncols(pre))return;
+var sk=mm[2]+":"+mm[3],t=String(S[pre+":t"+sk]||"").trim();if(!t)return;var fid="T|"+v+"|"+t,e=g[fid];
+var home=weekIxOf(pkey(m2[1])),better=!e||(ix===home)||(e.ix!==home&&pre>e.pre);
+if(better){g[fid]={ix:ix,pre:pre,ds:m2[1],tm:m2[2],t:t,fid:fid,pr:S[pre+":p"+sk]||0,done:e?e.done:false,go:{kind:"week",p:L.indexOf(ix),k:pre+":t"+sk}};}
+if(S[pre+":c"+sk])g[fid].done=true;});
+return Object.keys(g).map(function(k){return g[k];});}
 function remindersFor(d){var out=[],ds=dkey(d),ix=weekIxOf(d);
 if(ix>=0){var pre=dkey(M[ix].d),i=wdi(d),n=S[pre+":dn"+i]||9,p=L.indexOf(ix);
 for(var r=1;r<=n;r++){var tm=S[pre+":dr"+i+":"+r],t=String(S[pre+":d"+i+":"+r]||"").trim();if(!tm||!t||S[pre+":dc"+i+":"+r])continue;
@@ -761,6 +792,7 @@ out.push({tm:tm,t:t,src:DAYS[i],go:{kind:"week",p:p,k:pre+":d"+i+":"+r}});}}
 getList().forEach(function(c){var b="cust:"+c.id+":",n=S[b+"n"]||14;
 for(var r=0;r<n;r++){var tm=S[b+"h:"+r],t=String(S[b+"t:"+r]||"").trim();if(!tm||!t||S[b+"a:"+r]!==ds||S[b+"c:"+r])continue;
 out.push({tm:tm,t:t,src:c.name,go:{kind:"page",id:c.id,k:b+"t:"+r}});}});
+takipRems().forEach(function(x){if(x.ds===ds&&!x.done)out.push({tm:x.tm,t:x.t,src:"Takip",go:x.go,fid:x.fid});});
 return out;}
 function notify(title,body,go){
 if(NATIVE&&window.agendaAPI.notify){window.agendaAPI.notify({title:title,body:body,target:go}).catch(function(){});return;}
@@ -768,12 +800,14 @@ try{if(window.Notification&&Notification.permission==="granted"){var n=new Notif
 if(document.visibilityState==="visible"&&!document.querySelector(".mdl"))showMsg(title+" — "+body);}
 function minsDiff(a,b){var x=a.split(":"),y=b.split(":");return (+y[0]*60+(+y[1]))-(+x[0]*60+(+x[1]));}
 var FK=KEY+":fired";
+var LASTD=dkey(new Date());
 function tick(){var now=new Date(),td=new Date(now.getFullYear(),now.getMonth(),now.getDate()),ds=dkey(td);
+if(ds!==LASTD){var ae=document.activeElement;if(!document.querySelector(".mdl")&&!(ae&&/^(INPUT|TEXTAREA|SELECT)$/.test(ae.tagName))){LASTD=ds;refresh();}}
 ensureRec(weekIxOf(td));
 var f;try{f=JSON.parse(localStorage.getItem(FK)||"{}")||{};}catch(e){f={};}
 if(f.day!==ds||!f.ids)f={day:ds,ids:{}};
 var hm=p2(now.getHours())+":"+p2(now.getMinutes()),due=[];
-remindersFor(td).forEach(function(x){var id=x.tm+"|"+x.go.k+"|"+x.t;if(f.ids[id])return;if(x.tm<=hm){f.ids[id]=1;due.push(x);}});
+remindersFor(td).forEach(function(x){var id=x.fid||(x.tm+"|"+x.go.k+"|"+x.t);if(f.ids[id])return;if(x.tm<=hm){f.ids[id]=1;due.push(x);}});
 try{localStorage.setItem(FK,JSON.stringify(f));}catch(e){}
 if(!due.length)return;
 var late=due.filter(function(x){return minsDiff(x.tm,hm)>10;}),fresh=due.filter(function(x){return minsDiff(x.tm,hm)<=10;});
